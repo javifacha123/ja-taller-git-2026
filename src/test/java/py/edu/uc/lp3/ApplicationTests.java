@@ -1,10 +1,10 @@
-package py.edu.uc.lp3.ja_taller_git_2026;
+package py.edu.uc.lp3;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class JaTallerGit2026ApplicationTests {
+class ApplicationTests {
 
 	@Test
 	void contextLoads() {

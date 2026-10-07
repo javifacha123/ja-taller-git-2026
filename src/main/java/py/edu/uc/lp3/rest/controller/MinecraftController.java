@@ -1,11 +1,11 @@
-package py.edu.uc.lp3.ja_taller_git_2026.controller;
+package py.edu.uc.lp3.rest.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import py.edu.uc.lp3.ja_taller_git_2026.domain.Aldeano;
-import py.edu.uc.lp3.ja_taller_git_2026.domain.Creeper;
-import py.edu.uc.lp3.ja_taller_git_2026.domain.EntidadMinecraft;
+import py.edu.uc.lp3.domain.Aldeano;
+import py.edu.uc.lp3.domain.Creeper;
+import py.edu.uc.lp3.domain.EntidadMinecraft;
 
 import java.util.Map;
 

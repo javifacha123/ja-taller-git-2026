@@ -1,4 +1,4 @@
-package py.edu.uc.lp3.ja_taller_git_2026.domain;
+package py.edu.uc.lp3.domain;
 
 public class Creeper extends EntidadMinecraft {
 
