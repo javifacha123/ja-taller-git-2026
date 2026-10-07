@@ -48,4 +48,9 @@ public abstract class EntidadMinecraft {
     public void desaparecer() {
         vida = 0;
     }
+
+    // SOBRECARGA: mismo nombre, otra lista de argumentos
+    public void recibirDanio(int dano, boolean conArmadura) {
+        recibirDanio(conArmadura ? dano / 2 : dano);
+    }
 }
