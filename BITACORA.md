@@ -120,3 +120,16 @@ classDiagram
     class Aldeano {
         +moverse()
     }
+
+## Asistencia de inteligencia artificial (Tarea POO-06)
+
+- **Marca del asistente:** Claude (Anthropic), en la aplicación web claude.ai.
+- **Modelo exacto:** Claude Sonnet 5.5
+- **Resumen de prompts:**
+  1. Pedí revisar mi repositorio y mi bitácora de la tarea anterior y decirme si estaban completos.
+  2. Pedí armar la bitácora en un documento de Word listo para entregar.
+  3. Pedí una guía paso a paso para hacer el ejercicio POO-06 en mi máquina virtual con Lubuntu.
+  4. Fui pegando las salidas de la terminal (estructura del proyecto, código, errores) para que me ayudara a mover las clases a los paquetes `domain` y `rest.controller` según el template.
+  5. Pedí adaptar a mi código los constructores simples y sobrecargados, la sobrecarga de `recibirDanio` y el controller con parámetros opcionales.
+  6. Pedí ayuda para redactar el README (diagrama Mermaid y apartado de sobrecarga y sobreescritura) y esta sección de bitácora.
+- **Qué hice yo:** ejecuté todos los comandos en mi VM, compilé, probé con curl y revisé los resultados antes de hacer cada commit.
