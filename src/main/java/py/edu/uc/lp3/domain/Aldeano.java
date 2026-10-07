@@ -2,6 +2,10 @@ package py.edu.uc.lp3.domain;
 
 public class Aldeano extends EntidadMinecraft {
 
+    public Aldeano(String nombre) {
+        super(nombre);
+    }
+
     public Aldeano(String nombre, int vida) {
         super(nombre, vida);
     }
