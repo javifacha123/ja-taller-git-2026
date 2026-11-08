@@ -2,7 +2,7 @@
 
 **Alumno:** Javier Atlasovich · **Asignatura:** Lenguaje de Programación 3 (CYT646)
 **Repositorio:** <https://github.com/javifacha123/ja-taller-git-2026>
-**Commit de la solución:** `https://github.com/javifacha123/ja-taller-git-2026/commit/<HASH>` *(completar con el hash final)*
+**Commit de la solución:** <https://github.com/javifacha123/ja-taller-git-2026/commit/84d8224b0348d1c94effd562c4d3892d77f818c5>
 
 ## 1. Objetivo
 
