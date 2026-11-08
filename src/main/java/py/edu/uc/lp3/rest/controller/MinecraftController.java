@@ -1,7 +1,5 @@
 package py.edu.uc.lp3.rest.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +11,11 @@ import py.edu.uc.lp3.exceptions.EntidadInvalidaException;
 
 import java.util.Map;
 
+/**
+ * Endpoint de POO-06 (construccion por parametros de la URL, sin persistir).
+ * Se conserva para no romper las pruebas anteriores. Los errores los atiende
+ * MinecraftExceptionHandler.
+ */
 @RestController
 public class MinecraftController {
 
@@ -64,11 +67,5 @@ public class MinecraftController {
             default:
                 throw new EntidadInvalidaException("Tipo de entidad no válido: " + tipo);
         }
-    }
-
-    // Las reglas viven en el dominio; el controller solo informa el rechazo
-    @ExceptionHandler(EntidadInvalidaException.class)
-    public ResponseEntity<Map<String, String>> manejarError(EntidadInvalidaException ex) {
-        return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
     }
 }
