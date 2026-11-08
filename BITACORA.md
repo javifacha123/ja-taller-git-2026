@@ -120,6 +120,7 @@ classDiagram
     class Aldeano {
         +moverse()
     }
+```
 
 ## Asistencia de inteligencia artificial (Tarea POO-06)
 
@@ -133,3 +134,15 @@ classDiagram
   5. Pedí adaptar a mi código los constructores simples y sobrecargados, la sobrecarga de `recibirDanio` y el controller con parámetros opcionales.
   6. Pedí ayuda para redactar el README (diagrama Mermaid y apartado de sobrecarga y sobreescritura) y esta sección de bitácora.
 - **Qué hice yo:** ejecuté todos los comandos en mi VM, compilé, probé con curl y revisé los resultados antes de hacer cada commit.
+
+## Asistencia de inteligencia artificial (Tarea POO-08: CRUD, H2 e Insomnia)
+
+- **Marca del asistente:** Claude (Anthropic), en la aplicación claude.ai, con acceso a mi repositorio de GitHub.
+- **Modelo exacto:** Claude Opus 5.5 (`claude-opus-5-5`)
+- **Resumen de prompts:**
+  1. Le pasé el enunciado de POO-08, la rúbrica y el template de paquetes y le pedí ayuda para hacer el trabajo completo sobre mi modelado de Minecraft.
+  2. Conecté mi cuenta de GitHub para que leyera el repositorio y partiera de mis clases de POO-06 (`EntidadMinecraft`, `Creeper`, `Aldeano`, `Enderman`).
+  3. Le pedí que agregara JPA y H2, convirtiera la familia en entidades sin romper el ocultamiento, sumara la interface `Explosivo` (Creeper y TNT), las dos reglas de explosión, la jerarquía de excepciones con un handler por tipo y la colección de Insomnia.
+  4. Le pedí el README con el diagrama Mermaid y las respuestas a "Qué hay que pensar", esta bitácora y el documento de especificaciones para Classroom, con commits separados en una rama.
+- **Cómo se verificó:** el asistente no podía descargar dependencias de Maven en su entorno, así que compiló el código contra versiones mínimas de las APIs y corrió la simulación del dominio en Java puro para comprobar los números del README. Yo arranqué el servicio con `./mvnw spring-boot:run` en mi máquina, recorrí la colección de Insomnia, abrí la consola de H2 y revisé el código antes de unir la rama.
+
