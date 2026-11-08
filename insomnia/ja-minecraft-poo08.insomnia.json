@@ -1,0 +1,718 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-11-08T18:30:00.000Z",
+  "__export_source": "insomnia.desktop.app:v10.0.0",
+  "resources": [
+    {
+      "_id": "wrk_ja_minecraft_poo08",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "JA Minecraft POO-08 (CRUD + H2 + explosiones)",
+      "description": "Colección del ejercicio POO-08 de Javier Atlasovich. Ejecutar las carpetas en orden con la base vacía (borrar la carpeta data/ antes de arrancar).",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_ja_base",
+      "_type": "environment",
+      "parentId": "wrk_ja_minecraft_poo08",
+      "name": "Base Environment",
+      "metaSortKey": 1,
+      "data": {
+        "base_url": "http://localhost:8080",
+        "creeper_id": 1,
+        "aldeano_id": 2,
+        "enderman_id": 3,
+        "borrar_id": 4,
+        "tnt_id": 1,
+        "explosion_id": 1,
+        "id_inexistente": 9999
+      }
+    },
+    {
+      "_id": "fld_01",
+      "_type": "request_group",
+      "parentId": "wrk_ja_minecraft_poo08",
+      "name": "00 · Salud",
+      "description": "",
+      "metaSortKey": 100,
+      "environment": {}
+    },
+    {
+      "_id": "req_001",
+      "_type": "request",
+      "parentId": "fld_01",
+      "name": "GET / (vivo)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/",
+      "description": "Debe responder 200 con el texto de la API.",
+      "metaSortKey": 10,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "fld_02",
+      "_type": "request_group",
+      "parentId": "wrk_ja_minecraft_poo08",
+      "name": "01 · CRUD /api/entidades",
+      "description": "Crear las cuatro entidades en orden: con la base vacía reciben los ids 1, 2, 3 y 4 (los mismos que trae el entorno).",
+      "metaSortKey": 200,
+      "environment": {}
+    },
+    {
+      "_id": "req_002",
+      "_type": "request",
+      "parentId": "fld_02",
+      "name": "01 POST Creeper (id 1)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "201 + id. El Creeper queda en el origen.",
+      "metaSortKey": 20,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"creeper\",\n  \"nombre\": \"Creepy\",\n  \"vida\": 20,\n  \"x\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_003",
+      "_type": "request",
+      "parentId": "fld_02",
+      "name": "02 POST Aldeano (id 2)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "201 + id.",
+      "metaSortKey": 30,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"aldeano\",\n  \"nombre\": \"Testificate\",\n  \"vida\": 20,\n  \"x\": 1,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_004",
+      "_type": "request",
+      "parentId": "fld_02",
+      "name": "03 POST Enderman (id 3)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "201 + id.",
+      "metaSortKey": 40,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"enderman\",\n  \"nombre\": \"Slender\",\n  \"vida\": 40,\n  \"bloquesTeletransporte\": 8,\n  \"x\": 2,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_005",
+      "_type": "request",
+      "parentId": "fld_02",
+      "name": "04 POST Aldeano lejano (id 4, para borrar)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "201 + id. Se borra en el paso 09.",
+      "metaSortKey": 50,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"aldeano\",\n  \"nombre\": \"Lejano\",\n  \"vida\": 20,\n  \"x\": 10,\n  \"z\": 10\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_006",
+      "_type": "request",
+      "parentId": "fld_02",
+      "name": "05 GET lista",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "200 con las entidades persistidas; cada una trae su 'tipo'.",
+      "metaSortKey": 60,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_007",
+      "_type": "request",
+      "parentId": "fld_02",
+      "name": "06 GET por id (Aldeano)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/entidades/{{ _.aldeano_id }}",
+      "description": "200, coincide con lo creado.",
+      "metaSortKey": 70,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_008",
+      "_type": "request",
+      "parentId": "fld_02",
+      "name": "07 PATCH Aldeano (renombrar y mover)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/entidades/{{ _.aldeano_id }}",
+      "description": "200. Cambia nombre y z; x se omite y queda igual.",
+      "metaSortKey": 80,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Testificate el Herrero\",\n  \"z\": 1\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_009",
+      "_type": "request",
+      "parentId": "fld_02",
+      "name": "08 GET por id después del PATCH",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/entidades/{{ _.aldeano_id }}",
+      "description": "El cambio sigue ahí: quedó persistido.",
+      "metaSortKey": 90,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_010",
+      "_type": "request",
+      "parentId": "fld_02",
+      "name": "09 DELETE Aldeano lejano",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/entidades/{{ _.borrar_id }}",
+      "description": "204 sin cuerpo.",
+      "metaSortKey": 100,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_011",
+      "_type": "request",
+      "parentId": "fld_02",
+      "name": "10 GET del borrado → 404",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/entidades/{{ _.borrar_id }}",
+      "description": "404 ENTIDAD_NO_ENCONTRADA.",
+      "metaSortKey": 110,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_012",
+      "_type": "request",
+      "parentId": "fld_02",
+      "name": "11 GET filtro por nombre",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/entidades?nombre=creep",
+      "description": "Consulta derivada findByNombreContainingIgnoreCase.",
+      "metaSortKey": 120,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "fld_03",
+      "_type": "request_group",
+      "parentId": "wrk_ja_minecraft_poo08",
+      "name": "02 · Pedidos ilegales y errores",
+      "description": "Un pedido por cada hija de MinecraftException más los casos borde.",
+      "metaSortKey": 300,
+      "environment": {}
+    },
+    {
+      "_id": "req_013",
+      "_type": "request",
+      "parentId": "fld_03",
+      "name": "01 POST ilegal: vida negativa → 400",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "400 ENTIDAD_INVALIDA (lo lanza el constructor). Correr después 02 y ver que la lista no creció.",
+      "metaSortKey": 130,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"creeper\",\n  \"nombre\": \"Malo\",\n  \"vida\": -5\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_014",
+      "_type": "request",
+      "parentId": "fld_03",
+      "name": "02 GET lista (no creció)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "Misma cantidad que antes del POST ilegal.",
+      "metaSortKey": 140,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_015",
+      "_type": "request",
+      "parentId": "fld_03",
+      "name": "03 POST ilegal: nombre vacío → 400",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "400 ENTIDAD_INVALIDA.",
+      "metaSortKey": 150,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"aldeano\",\n  \"nombre\": \"   \",\n  \"vida\": 10\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_016",
+      "_type": "request",
+      "parentId": "fld_03",
+      "name": "04 GET id inexistente → 404",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/entidades/{{ _.id_inexistente }}",
+      "description": "404 ENTIDAD_NO_ENCONTRADA.",
+      "metaSortKey": 160,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_017",
+      "_type": "request",
+      "parentId": "fld_03",
+      "name": "05 DELETE id inexistente → 404",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/entidades/{{ _.id_inexistente }}",
+      "description": "404 ENTIDAD_NO_ENCONTRADA.",
+      "metaSortKey": 170,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_018",
+      "_type": "request",
+      "parentId": "fld_03",
+      "name": "06 PATCH vida → 400",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/entidades/{{ _.aldeano_id }}",
+      "description": "400: la vida solo cambia por las reglas del juego.",
+      "metaSortKey": 180,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"vida\": 999\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_019",
+      "_type": "request",
+      "parentId": "fld_03",
+      "name": "07 PATCH bloques a un Aldeano → 400",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/entidades/{{ _.aldeano_id }}",
+      "description": "400: solo el Enderman tiene bloques.",
+      "metaSortKey": 190,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"bloquesTeletransporte\": 5\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_020",
+      "_type": "request",
+      "parentId": "fld_03",
+      "name": "08 POST tipo desconocido → 400 JSON_INVALIDO",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "400 JSON_INVALIDO (Jackson no conoce el subtipo).",
+      "metaSortKey": 200,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"esqueleto\",\n  \"nombre\": \"Skelly\"\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "fld_04",
+      "_type": "request_group",
+      "parentId": "wrk_ja_minecraft_poo08",
+      "name": "03 · Protocolo Explosivo",
+      "description": "Endpoint que usa la interface Explosivo: mezcla Creepers y TNT.",
+      "metaSortKey": 400,
+      "environment": {}
+    },
+    {
+      "_id": "req_021",
+      "_type": "request",
+      "parentId": "fld_04",
+      "name": "01 POST TNT (id 1)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/tnt",
+      "description": "201. Segunda familia que implementa Explosivo.",
+      "metaSortKey": 210,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"x\": 3,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_022",
+      "_type": "request",
+      "parentId": "fld_04",
+      "name": "02 GET /api/explosivos",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/explosivos",
+      "description": "Creeper y TNT en la misma lista, con potencia, radio y puedeExplotar.",
+      "metaSortKey": 220,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_023",
+      "_type": "request",
+      "parentId": "fld_04",
+      "name": "03 GET /api/explosivos?disponibles=true",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/explosivos?disponibles=true",
+      "description": "Solo los que todavía pueden explotar.",
+      "metaSortKey": 230,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "fld_05",
+      "_type": "request_group",
+      "parentId": "wrk_ja_minecraft_poo08",
+      "name": "04 · Simulación de explosiones",
+      "description": "Caso feliz: aplica las dos reglas. Ver los números esperados en el README.",
+      "metaSortKey": 500,
+      "environment": {}
+    },
+    {
+      "_id": "req_024",
+      "_type": "request",
+      "parentId": "fld_05",
+      "name": "01 POST explosión del Creeper",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "201. Testificate recibe 8 de daño (regla 1); Slender esquiva gastando 2 bloques (regla 2).",
+      "metaSortKey": 240,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipoExplosivo\": \"creeper\",\n  \"explosivoId\": 1\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_025",
+      "_type": "request",
+      "parentId": "fld_05",
+      "name": "02 GET entidades después",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "Creeper vida 0 y explotado; Aldeano vida 12; Enderman en x=4 con 6 bloques.",
+      "metaSortKey": 250,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_026",
+      "_type": "request",
+      "parentId": "fld_05",
+      "name": "03 POST explosión de la TNT",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "201. Aldeano recibe 9 (queda en 3); Enderman esquiva otra vez gastando 4 bloques.",
+      "metaSortKey": 260,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipoExplosivo\": \"tnt\",\n  \"explosivoId\": 1\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_027",
+      "_type": "request",
+      "parentId": "fld_05",
+      "name": "04 GET historial de explosiones",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "Las dos explosiones guardadas, la más reciente primero.",
+      "metaSortKey": 270,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_028",
+      "_type": "request",
+      "parentId": "fld_05",
+      "name": "05 GET explosión por id",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/explosiones/{{ _.explosion_id }}",
+      "description": "Detalle de la primera explosión con sus impactos.",
+      "metaSortKey": 280,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_029",
+      "_type": "request",
+      "parentId": "fld_05",
+      "name": "06 GET /api/explosivos después",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/explosivos",
+      "description": "Ahora puedeExplotar es false para ambos.",
+      "metaSortKey": 290,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "fld_06",
+      "_type": "request_group",
+      "parentId": "wrk_ja_minecraft_poo08",
+      "name": "05 · Excepciones de la simulación",
+      "description": "",
+      "metaSortKey": 600,
+      "environment": {}
+    },
+    {
+      "_id": "req_030",
+      "_type": "request",
+      "parentId": "fld_06",
+      "name": "01 POST Creeper ya explotado → 409",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "409 EXPLOSION_IMPOSIBLE (la lanza Creeper.detonar).",
+      "metaSortKey": 300,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipoExplosivo\": \"creeper\",\n  \"explosivoId\": 1\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_031",
+      "_type": "request",
+      "parentId": "fld_06",
+      "name": "02 POST TNT ya detonada → 409",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "409 EXPLOSION_IMPOSIBLE (la lanza BloqueTnt.detonar).",
+      "metaSortKey": 310,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipoExplosivo\": \"tnt\",\n  \"explosivoId\": 1\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_032",
+      "_type": "request",
+      "parentId": "fld_06",
+      "name": "03 POST explosivo inexistente → 404",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "404 ENTIDAD_NO_ENCONTRADA.",
+      "metaSortKey": 320,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipoExplosivo\": \"creeper\",\n  \"explosivoId\": 9999\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    },
+    {
+      "_id": "req_033",
+      "_type": "request",
+      "parentId": "fld_06",
+      "name": "04 POST tipoExplosivo inválido → 400",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "400 ENTIDAD_INVALIDA.",
+      "metaSortKey": 330,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipoExplosivo\": \"lava\",\n  \"explosivoId\": 1\n}"
+      },
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true
+    }
+  ]
+}
