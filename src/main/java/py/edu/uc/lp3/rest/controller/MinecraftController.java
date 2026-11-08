@@ -9,6 +9,7 @@ import py.edu.uc.lp3.domain.Aldeano;
 import py.edu.uc.lp3.domain.Creeper;
 import py.edu.uc.lp3.domain.Enderman;
 import py.edu.uc.lp3.domain.EntidadMinecraft;
+import py.edu.uc.lp3.exceptions.EntidadInvalidaException;
 
 import java.util.Map;
 
@@ -57,17 +58,17 @@ public class MinecraftController {
                     return new Enderman(nombre, vida);
                 }
                 if (vida == null) {
-                    throw new IllegalArgumentException("Para indicar bloques también hay que indicar la vida");
+                    throw new EntidadInvalidaException("Para indicar bloques también hay que indicar la vida");
                 }
                 return new Enderman(nombre, vida, bloques);
             default:
-                throw new IllegalArgumentException("Tipo de entidad no válido: " + tipo);
+                throw new EntidadInvalidaException("Tipo de entidad no válido: " + tipo);
         }
     }
 
     // Las reglas viven en el dominio; el controller solo informa el rechazo
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> manejarError(IllegalArgumentException ex) {
+    @ExceptionHandler(EntidadInvalidaException.class)
+    public ResponseEntity<Map<String, String>> manejarError(EntidadInvalidaException ex) {
         return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
     }
 }
