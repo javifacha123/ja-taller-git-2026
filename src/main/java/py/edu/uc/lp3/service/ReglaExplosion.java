@@ -35,4 +35,26 @@ public abstract class ReglaExplosion {
         return entidad.estaVivo()
                 && entidad.distanciaA(fuente.getX(), fuente.getZ()) <= fuente.radioExplosion();
     }
+
+    // ---------------- Las dos fórmulas, en un solo lugar ----------------
+    // Las usan las reglas al simular y ReglaServiceImpl al responderle a un
+    // compañero que consulta por HTTP. Si una fórmula cambia, se toca acá y
+    // las dos puertas quedan de acuerdo solas.
+
+    /**
+     * REGLA 1 — Daño de la onda expansiva a una distancia dada.
+     * {@code ceil(potencia * (radio + 1 - distancia) / (radio + 1))}.
+     */
+    public static int danioPorDistancia(int potencia, int radio, double distancia) {
+        double factor = (radio + 1 - distancia) / (radio + 1);
+        return (int) Math.ceil(potencia * factor);
+    }
+
+    /**
+     * REGLA 2 — Bloques de teletransporte que necesita un Enderman para salir
+     * del radio desde esa distancia: {@code ceil(radio + 1 - distancia)}.
+     */
+    public static int bloquesNecesarios(int radio, double distancia) {
+        return (int) Math.ceil(radio + 1 - distancia);
+    }
 }

@@ -37,7 +37,7 @@ public class ReglaEsquiveEnderman extends ReglaOndaExpansiva {
         }
         Enderman enderman = (Enderman) entidad;
         double distancia = enderman.distanciaA(fuente.getX(), fuente.getZ());
-        int necesarios = (int) Math.ceil(fuente.radioExplosion() + 1 - distancia);
+        int necesarios = bloquesNecesarios(fuente.radioExplosion(), distancia);
         if (enderman.getBloquesTeletransporte() < necesarios) {
             return super.aplicar(enderman, fuente);     // no le alcanza: recibe el daño
         }

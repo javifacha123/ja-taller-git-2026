@@ -17,6 +17,18 @@ public final class ApiPaths {
     /** Simulación: cada POST crea una explosión; GET muestra el historial. */
     public static final String EXPLOSIONES = BASE_API + "/explosiones";
 
+    /** POO-09: mis dos reglas publicadas, para que las consulte un compañero. */
+    public static final String REGLAS = BASE_API + "/reglas";
+
+    /** POO-09: regla 1, onda expansiva. */
+    public static final String REGLA_ONDA = REGLAS + "/onda-expansiva";
+
+    /** POO-09: regla 2, esquive del Enderman. */
+    public static final String REGLA_ESQUIVE = REGLAS + "/esquive-enderman";
+
+    /** POO-09: mi escenario, que consulta las reglas de A2 y de A3. */
+    public static final String ESCENARIOS = BASE_API + "/escenarios";
+
     private ApiPaths() {
     }
 }

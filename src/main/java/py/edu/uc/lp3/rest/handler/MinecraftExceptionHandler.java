@@ -10,6 +10,7 @@ import py.edu.uc.lp3.exceptions.EntidadInvalidaException;
 import py.edu.uc.lp3.exceptions.EntidadNoEncontradaException;
 import py.edu.uc.lp3.exceptions.ExplosionImposibleException;
 import py.edu.uc.lp3.exceptions.MinecraftException;
+import py.edu.uc.lp3.exceptions.ReglaRechazadaException;
 import py.edu.uc.lp3.rest.dto.ErrorRespuesta;
 
 /**
@@ -36,6 +37,13 @@ public class MinecraftExceptionHandler {
     @ExceptionHandler(ExplosionImposibleException.class)
     public ResponseEntity<ErrorRespuesta> explosionImposible(ExplosionImposibleException ex, HttpServletRequest pedido) {
         return responder(HttpStatus.CONFLICT, ex.getCodigo(), ex, ex.getMessage(), pedido);
+    }
+
+    /** POO-09: una de mis dos reglas rechazó la jugada que me propusieron. */
+    @ExceptionHandler(ReglaRechazadaException.class)
+    public ResponseEntity<ErrorRespuesta> reglaRechazada(ReglaRechazadaException ex, HttpServletRequest pedido) {
+        return responder(HttpStatus.BAD_REQUEST, ex.getCodigo(), ex,
+                "La regla '" + ex.getRegla() + "' rechazó la jugada: " + ex.getMessage(), pedido);
     }
 
     /** Red de seguridad: una hija futura sin handler propio. */

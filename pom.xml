@@ -28,6 +28,9 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<!-- POO-09: springdoc 3.x es la serie que acompana a Spring Boot 4.x
+		     (la serie 2.x es para Spring Boot 3.x y en Boot 4 deja /v3/api-docs en 404) -->
+		<springdoc.version>3.2.1</springdoc.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -52,6 +55,13 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-h2console</artifactId>
+		</dependency>
+
+		<!-- POO-09: publica el OpenAPI en /v3/api-docs y la interfaz en /swagger-ui.html -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc.version}</version>
 		</dependency>
 
 		<dependency>

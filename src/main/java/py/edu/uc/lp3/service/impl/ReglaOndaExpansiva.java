@@ -37,10 +37,4 @@ public class ReglaOndaExpansiva extends ReglaExplosion {
         entidad.aplicarDanio(danio);
         return Impacto.conDanio(entidad, distancia, danio);
     }
-
-    /** El daño decae de forma lineal con la distancia al centro. */
-    protected static int danioPorDistancia(int potencia, int radio, double distancia) {
-        double factor = (radio + 1 - distancia) / (radio + 1);
-        return (int) Math.ceil(potencia * factor);
-    }
 }
