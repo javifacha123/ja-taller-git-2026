@@ -4,37 +4,28 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import py.edu.uc.lp3.constants.ApiPaths;
-import py.edu.uc.lp3.domain.Explosivo;
-import py.edu.uc.lp3.repository.BloqueTntRepository;
-import py.edu.uc.lp3.repository.CreeperRepository;
 import py.edu.uc.lp3.rest.dto.ExplosivoResumen;
+import py.edu.uc.lp3.service.ExplosivoService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Endpoint del protocolo de dominio: junta Creepers y TNT en una sola lista de
- * tipo Explosivo y les habla solo con los mensajes de la interfaz.
+ * Endpoint del protocolo de dominio: devuelve Creepers y TNT en una sola lista
+ * de tipo Explosivo. Solo traduce HTTP y delega en el servicio.
  */
 @RestController
 public class ExplosivoController {
 
-    private final CreeperRepository creepers;
-    private final BloqueTntRepository tnts;
+    private final ExplosivoService servicio;
 
-    public ExplosivoController(CreeperRepository creepers, BloqueTntRepository tnts) {
-        this.creepers = creepers;
-        this.tnts = tnts;
+    public ExplosivoController(ExplosivoService servicio) {
+        this.servicio = servicio;
     }
 
     @GetMapping(ApiPaths.EXPLOSIVOS)
     public List<ExplosivoResumen> listar(
             @RequestParam(name = "disponibles", defaultValue = "false") boolean soloDisponibles) {
-        List<Explosivo> explosivos = new ArrayList<>();
-        explosivos.addAll(creepers.findAll());
-        explosivos.addAll(tnts.findAll());
-        return explosivos.stream()
-                .filter(e -> !soloDisponibles || e.puedeExplotar())
+        return servicio.listar(soloDisponibles).stream()
                 .map(ExplosivoResumen::de)
                 .toList();
     }

@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface BloqueTntRepository extends JpaRepository<BloqueTnt, Long> {
 
-    /** TNT que todavia no exploto. */
+    /** TNT que todavía no explotó. */
     List<BloqueTnt> findByDetonadoFalse();
 }

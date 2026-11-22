@@ -1,9 +1,12 @@
 package py.edu.uc.lp3.exceptions;
 
 /**
- * Se lanza cuando un constructor o un mensaje del dominio recibe valores que
- * dejarian al objeto en un estado imposible (vida <= 0, nombre vacio,
- * bloques de teletransporte negativos, tipo de entidad desconocido...).
+ * La lanza la capa de servicios cuando un pedido trae valores que dejarían a
+ * la entidad en un estado imposible (vida <= 0, nombre vacío, bloques de
+ * teletransporte negativos, tipo de entidad desconocido...).
+ *
+ * <p>Las entities no validan: el servicio revisa los valores antes de llamar
+ * al constructor, así que ningún camino puede saltearse esta comprobación.</p>
  */
 public class EntidadInvalidaException extends MinecraftException {
 

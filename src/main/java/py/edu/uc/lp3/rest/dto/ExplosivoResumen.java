@@ -4,7 +4,7 @@ import py.edu.uc.lp3.domain.Explosivo;
 
 /**
  * Vista JSON armada SOLO con mensajes del protocolo Explosivo: no importa si
- * detras hay un Creeper o una TNT.
+ * detrás hay un Creeper o una TNT.
  */
 public record ExplosivoResumen(String tipo, Long id, String nombre, int x, int z,
                                int potencia, int radio, boolean puedeExplotar) {

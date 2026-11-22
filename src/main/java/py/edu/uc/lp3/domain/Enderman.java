@@ -2,22 +2,33 @@ package py.edu.uc.lp3.domain;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import py.edu.uc.lp3.exceptions.EntidadInvalidaException;
 
+/**
+ * El Enderman se teletransporta. Guarda cuántos bloques de teletransporte le
+ * quedan; la regla que los gasta para esquivar una explosión vive en la capa
+ * de servicios ({@code ReglaEsquiveEnderman}), no acá.
+ *
+ * <p>Entity: solo estado. No valida y no lanza excepciones.</p>
+ */
 @Entity
 @DiscriminatorValue("ENDERMAN")
 public class Enderman extends EntidadMinecraft {
 
-    private static final int VIDA_ENDERMAN = 40;
-    private static final int BLOQUES_POR_DEFECTO = 8;
+    /** Vida que usa el constructor simple de un Enderman. */
+    public static final int VIDA_ENDERMAN = 40;
 
-    // Envoltorio (Integer) porque en SINGLE_TABLE las otras hijas dejan esta columna en NULL
+    /** Bloques de teletransporte que trae un Enderman recién aparecido. */
+    public static final int BLOQUES_POR_DEFECTO = 8;
+
+    // Envoltorio (Integer) porque en SINGLE_TABLE las otras hijas dejan esta
+    // columna en NULL.
     private Integer bloquesTeletransporte;
 
     /** Solo para JPA. */
     protected Enderman() {
     }
 
+    /** Constructor simple: vida y bloques por defecto, en el origen. */
     public Enderman(String nombre) {
         this(nombre, VIDA_ENDERMAN);
     }
@@ -30,9 +41,12 @@ public class Enderman extends EntidadMinecraft {
         this(nombre, vida, bloquesTeletransporte, 0, 0);
     }
 
+    /**
+     * Constructor completo: el único que asigna el campo propio y el que llama
+     * a {@code super(...)}. Los otros tres delegan en él con {@code this(...)}.
+     */
     public Enderman(String nombre, int vida, int bloquesTeletransporte, int x, int z) {
         super(nombre, vida, x, z);
-        validarBloques(bloquesTeletransporte);
         this.bloquesTeletransporte = bloquesTeletransporte;
     }
 
@@ -40,58 +54,21 @@ public class Enderman extends EntidadMinecraft {
         return bloquesTeletransporte == null ? 0 : bloquesTeletransporte;
     }
 
-    // No es un setter "tonto": valida igual que el constructor
-    public void setBloquesTeletransporte(int bloquesTeletransporte) {
-        validarBloques(bloquesTeletransporte);
-        this.bloquesTeletransporte = bloquesTeletransporte;
-    }
-
-    private static void validarBloques(int bloques) {
-        if (bloques < 0) {
-            throw new EntidadInvalidaException("Los bloques de teletransporte no pueden ser negativos");
-        }
-    }
-
     @Override
     public String moverse() {
         return "El Enderman se teletransporta " + getBloquesTeletransporte() + " bloques de distancia.";
     }
 
-    /**
-     * REGLA 2 — Esquive del Enderman (sobreescribe la regla 1).
-     * Si la onda lo alcanza y le quedan bloques de teletransporte suficientes
-     * para salir del radio (ceil(radio + 1 - distancia)), gasta esos bloques,
-     * aparece justo afuera del radio, en la direccion opuesta a la explosion,
-     * y no recibe dano. Si no le alcanzan, recibe el dano normal de la regla 1.
-     */
-    @Override
-    public Impacto recibirExplosion(Explosivo fuente) {
-        double distancia = distanciaA(fuente.getX(), fuente.getZ());
-        if (!estaVivo() || distancia > fuente.radioExplosion()) {
-            return null;
-        }
-        int necesarios = (int) Math.ceil(fuente.radioExplosion() + 1 - distancia);
-        if (getBloquesTeletransporte() < necesarios) {
-            return super.recibirExplosion(fuente);
-        }
-        this.bloquesTeletransporte = getBloquesTeletransporte() - necesarios;
-        alejarseDe(fuente);
-        return Impacto.esquivado(this, distancia, necesarios);
+    // ---------------- Cambios de estado ----------------
+    // Los llama el servicio, que ya validó.
+
+    /** Deja la cantidad de bloques de teletransporte en el valor indicado. */
+    public void fijarBloquesTeletransporte(int bloques) {
+        this.bloquesTeletransporte = bloques;
     }
 
-    /** Aparece a radio + 1 bloques del centro, sobre la recta centro -> Enderman. */
-    private void alejarseDe(Explosivo fuente) {
-        double dx = getX() - fuente.getX();
-        double dz = getZ() - fuente.getZ();
-        double largo = Math.sqrt(dx * dx + dz * dz);
-        if (largo == 0) {        // justo encima de la explosion: escapa hacia +X
-            dx = 1;
-            dz = 0;
-            largo = 1;
-        }
-        int destino = fuente.radioExplosion() + 1;
-        int nuevoX = fuente.getX() + (int) Math.round(dx / largo * destino);
-        int nuevoZ = fuente.getZ() + (int) Math.round(dz / largo * destino);
-        teletransportarA(nuevoX, nuevoZ);
+    /** Descuenta bloques de teletransporte (los que gastó al esquivar). */
+    public void gastarBloques(int bloques) {
+        this.bloquesTeletransporte = getBloquesTeletransporte() - bloques;
     }
 }

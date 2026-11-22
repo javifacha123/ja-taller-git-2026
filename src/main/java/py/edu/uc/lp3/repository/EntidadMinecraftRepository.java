@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * Repositorio de la clase base de la familia. Es una interfaz: declaramos los
- * mensajes y Spring Data genera la implementacion a partir del nombre del metodo.
+ * mensajes y Spring Data genera la implementación a partir del nombre del método.
  * Como trabaja con EntidadMinecraft, devuelve Creepers, Aldeanos y Endermans.
  */
 public interface EntidadMinecraftRepository extends JpaRepository<EntidadMinecraft, Long> {
@@ -15,6 +15,6 @@ public interface EntidadMinecraftRepository extends JpaRepository<EntidadMinecra
     /** Entidades con vida mayor a la indicada (con 0: las que siguen vivas). */
     List<EntidadMinecraft> findByVidaGreaterThan(int vida);
 
-    /** Busqueda por parte del nombre, sin importar mayusculas. */
+    /** Búsqueda por parte del nombre, sin importar mayúsculas. */
     List<EntidadMinecraft> findByNombreContainingIgnoreCase(String nombre);
 }

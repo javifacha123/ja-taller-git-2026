@@ -14,13 +14,13 @@ import py.edu.uc.lp3.rest.dto.ErrorRespuesta;
 
 /**
  * Traduce las excepciones del dominio a HTTP. Hay un handler por tipo:
- * Spring elige el @ExceptionHandler mas especifico para la clase lanzada,
- * asi cada hija tiene su codigo de estado y su codigo en el JSON.
+ * Spring elige el @ExceptionHandler más específico para la clase lanzada,
+ * así cada hija tiene su código de estado y su código en el JSON.
  */
 @RestControllerAdvice
 public class MinecraftExceptionHandler {
 
-    /** Invariante de construccion o de un mensaje roto: el pedido trae valores ilegales. */
+    /** Invariante de construcción o de un mensaje roto: el pedido trae valores ilegales. */
     @ExceptionHandler(EntidadInvalidaException.class)
     public ResponseEntity<ErrorRespuesta> entidadInvalida(EntidadInvalidaException ex, HttpServletRequest pedido) {
         return responder(HttpStatus.BAD_REQUEST, ex.getCodigo(), ex, ex.getMessage(), pedido);

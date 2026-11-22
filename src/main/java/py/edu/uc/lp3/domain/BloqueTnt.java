@@ -7,11 +7,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import py.edu.uc.lp3.exceptions.ExplosionImposibleException;
 
 /**
- * Un bloque de TNT: otra familia (no es una EntidadMinecraft), pero es Explosivo.
- * Explota con mas potencia y radio que un Creeper comun y se consume al detonar.
+ * Un bloque de TNT: otra familia (no es una EntidadMinecraft), pero es
+ * Explosivo. Explota con más potencia y más radio que un Creeper común y se
+ * consume al detonar.
+ *
+ * <p>Entity: solo estado. No valida y no lanza excepciones.</p>
  */
 @Entity
 @Table(name = "bloque_tnt")
@@ -29,7 +31,7 @@ public class BloqueTnt implements Explosivo {
     private int z;
     private boolean detonado;
 
-    /** Solo para JPA. Protegido: desde afuera la TNT se coloca con una posicion. */
+    /** Solo para JPA. Protegido: desde afuera la TNT se coloca con una posición. */
     protected BloqueTnt() {
     }
 
@@ -74,12 +76,10 @@ public class BloqueTnt implements Explosivo {
         return !detonado;
     }
 
+    /** Marca la TNT como detonada. El control lo hace el servicio. */
     @Override
-    public void detonar() {
-        if (detonado) {
-            throw new ExplosionImposibleException("La TNT " + id + " ya fue detonada");
-        }
-        detonado = true;
+    public void consumir() {
+        this.detonado = true;
     }
 
     @Override

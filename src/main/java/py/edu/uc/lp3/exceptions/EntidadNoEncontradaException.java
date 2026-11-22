@@ -1,7 +1,7 @@
 package py.edu.uc.lp3.exceptions;
 
 /**
- * Se lanza cuando se pide un recurso del mundo (entidad, TNT o explosion)
+ * Se lanza cuando se pide un recurso del mundo (entidad, TNT o explosión)
  * por un id que no existe en la base.
  */
 public class EntidadNoEncontradaException extends MinecraftException {

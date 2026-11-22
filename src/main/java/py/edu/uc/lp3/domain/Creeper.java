@@ -3,11 +3,14 @@ package py.edu.uc.lp3.domain;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import py.edu.uc.lp3.exceptions.ExplosionImposibleException;
 
 /**
- * El Creeper es una EntidadMinecraft ("es un") y ademas un Explosivo.
- * Un Creeper cargado (alcanzado por un rayo) explota con el doble de potencia y radio.
+ * El Creeper es una EntidadMinecraft ("es un") y además un Explosivo.
+ * Un Creeper cargado (alcanzado por un rayo) explota con el doble de potencia
+ * y el doble de radio.
+ *
+ * <p>Entity: solo estado. Quien decide si puede detonar y quien lanza la
+ * excepción cuando no puede es la capa de servicios.</p>
  */
 @Entity
 @DiscriminatorValue("CREEPER")
@@ -16,7 +19,8 @@ public class Creeper extends EntidadMinecraft implements Explosivo {
     private static final int POTENCIA = 12;
     private static final int RADIO = 3;
 
-    // Envoltorios (Boolean) porque en SINGLE_TABLE las filas de Aldeano y Enderman dejan esta columna en NULL
+    // Envoltorios (Boolean) porque en SINGLE_TABLE las filas de Aldeano y
+    // Enderman dejan estas columnas en NULL.
     private Boolean cargado;
     private Boolean explotado;
 
@@ -24,27 +28,27 @@ public class Creeper extends EntidadMinecraft implements Explosivo {
     protected Creeper() {
     }
 
+    /** Constructor simple: vida por defecto, en el origen, sin carga. */
     public Creeper(String nombre) {
-        super(nombre);
-        inicializar(false);
+        this(nombre, VIDA_POR_DEFECTO);
     }
 
     public Creeper(String nombre, int vida) {
-        super(nombre, vida);
-        inicializar(false);
+        this(nombre, vida, 0, 0);
     }
 
     public Creeper(String nombre, int vida, int x, int z) {
         this(nombre, vida, x, z, false);
     }
 
+    /**
+     * Constructor completo: es el único que asigna los campos propios y el que
+     * llama a {@code super(...)}. Los otros tres delegan en él con
+     * {@code this(...)}, así la inicialización queda en un solo lugar.
+     */
     public Creeper(String nombre, int vida, int x, int z, boolean cargado) {
         super(nombre, vida, x, z);
-        inicializar(cargado);
-    }
-
-    private void inicializar(boolean estaCargado) {
-        this.cargado = estaCargado;
+        this.cargado = cargado;
         this.explotado = false;
     }
 
@@ -82,13 +86,12 @@ public class Creeper extends EntidadMinecraft implements Explosivo {
         return estaVivo() && !isExplotado();
     }
 
-    /** Al explotar, el Creeper se consume: queda marcado y sin vida. */
+    /**
+     * Consume el explosivo: queda marcado y sin vida. No verifica si podía
+     * explotar; eso lo controla el servicio antes de llamar.
+     */
     @Override
-    public void detonar() {
-        if (!puedeExplotar()) {
-            throw new ExplosionImposibleException(
-                    "El Creeper '" + getNombre() + "' no puede explotar: ya explotó o no tiene vida");
-        }
+    public void consumir() {
         this.explotado = true;
         desaparecer();
     }

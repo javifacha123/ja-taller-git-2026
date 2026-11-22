@@ -9,38 +9,39 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import py.edu.uc.lp3.constants.ApiPaths;
 import py.edu.uc.lp3.domain.BloqueTnt;
-import py.edu.uc.lp3.exceptions.EntidadNoEncontradaException;
-import py.edu.uc.lp3.repository.BloqueTntRepository;
 import py.edu.uc.lp3.rest.dto.TntRequest;
+import py.edu.uc.lp3.service.TntService;
 
 import java.net.URI;
 import java.util.List;
 
-/** Colocar y consultar bloques de TNT (la segunda familia que implementa Explosivo). */
+/**
+ * Colocar y consultar bloques de TNT (la segunda familia que implementa
+ * Explosivo). Solo traduce HTTP y delega en el servicio.
+ */
 @RestController
 @RequestMapping(ApiPaths.TNT)
 public class TntController {
 
-    private final BloqueTntRepository repositorio;
+    private final TntService servicio;
 
-    public TntController(BloqueTntRepository repositorio) {
-        this.repositorio = repositorio;
+    public TntController(TntService servicio) {
+        this.servicio = servicio;
     }
 
     @PostMapping
     public ResponseEntity<BloqueTnt> colocar(@RequestBody TntRequest pedido) {
-        BloqueTnt guardada = repositorio.save(pedido.crear());
+        BloqueTnt guardada = servicio.colocar(pedido);
         return ResponseEntity.created(URI.create(ApiPaths.TNT + "/" + guardada.getId())).body(guardada);
     }
 
     @GetMapping
     public List<BloqueTnt> listar() {
-        return repositorio.findAll();
+        return servicio.listar();
     }
 
     @GetMapping("/{id}")
     public BloqueTnt buscar(@PathVariable("id") Long id) {
-        return repositorio.findById(id)
-                .orElseThrow(() -> new EntidadNoEncontradaException("una TNT", id));
+        return servicio.buscar(id);
     }
 }

@@ -17,11 +17,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Registro persistido de una simulacion: que exploto, donde, con que fuerza
- * y que le paso a cada entidad alcanzada.
+ * Registro persistido de una simulación: qué explotó, dónde, con qué fuerza y
+ * qué le pasó a cada entidad alcanzada.
  *
- * La simulacion se hace en {@link #provocar(Explosivo, List)}: el controller
- * (via el servicio) solo carga los objetos y guarda el resultado.
+ * <p>Entity: solo estado. La simulación (detonar el explosivo y aplicar la
+ * onda a cada entidad) la hace {@code SimulacionServiceImpl}; esta clase
+ * guarda el resultado que el servicio le va cargando.</p>
  */
 @Entity
 @Table(name = "explosion")
@@ -50,7 +51,8 @@ public class Explosion {
     protected Explosion() {
     }
 
-    private Explosion(Explosivo fuente) {
+    /** Copia del explosivo los datos del momento de la detonación. */
+    public Explosion(Explosivo fuente) {
         this.tipoExplosivo = fuente.tipoExplosivo();
         this.explosivoId = fuente.getId();
         this.nombreExplosivo = fuente.nombreExplosivo();
@@ -61,26 +63,9 @@ public class Explosion {
         this.momento = LocalDateTime.now();
     }
 
-    /**
-     * Simulacion: detona el explosivo y aplica la onda a cada entidad.
-     * Regla 1 (onda expansiva) vive en EntidadMinecraft.recibirExplosion.
-     * Regla 2 (esquive del Enderman) es la sobreescritura de ese metodo en Enderman.
-     *
-     * @throws py.edu.uc.lp3.exceptions.ExplosionImposibleException si el explosivo ya no puede explotar
-     */
-    public static Explosion provocar(Explosivo fuente, List<? extends EntidadMinecraft> entidades) {
-        fuente.detonar();                       // falla antes de tocar a nadie si no puede explotar
-        Explosion explosion = new Explosion(fuente);
-        for (EntidadMinecraft entidad : entidades) {
-            if (entidad == fuente) {
-                continue;                       // el Creeper no se dana a si mismo: ya se consumio
-            }
-            Impacto impacto = entidad.recibirExplosion(fuente);   // despacho dinamico: Enderman esquiva
-            if (impacto != null) {
-                explosion.impactos.add(impacto);
-            }
-        }
-        return explosion;
+    /** El servicio agrega un impacto por cada entidad que la onda alcanzó. */
+    public void registrar(Impacto impacto) {
+        this.impactos.add(impacto);
     }
 
     public Long getId() {

@@ -2,13 +2,14 @@ package py.edu.uc.lp3.rest.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import py.edu.uc.lp3.domain.EntidadMinecraft;
 
 /**
- * Cuerpo JSON del POST /api/entidades. La propiedad "tipo" decide que record
- * arma Jackson (creeper, aldeano o enderman). Cada record traduce el JSON a
- * una llamada al constructor sobrecargado que corresponde: asi las reglas de
- * construccion (vida > 0, nombre obligatorio...) las sigue validando el dominio.
+ * Cuerpo JSON del POST /api/entidades. La propiedad {@code tipo} decide qué
+ * record arma Jackson (creeper, aldeano o enderman).
+ *
+ * <p>Los tres records son solo datos: no validan y no construyen nada. Quién
+ * revisa los valores y qué constructor sobrecargado se usa lo decide
+ * {@code EntidadService}.</p>
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "tipo")
 @JsonSubTypes({
@@ -18,10 +19,15 @@ import py.edu.uc.lp3.domain.EntidadMinecraft;
 })
 public sealed interface EntidadRequest permits CreeperRequest, AldeanoRequest, EndermanRequest {
 
-    /** Construye la entidad de dominio; si algun valor es ilegal, el constructor lanza la excepcion. */
-    EntidadMinecraft crear();
+    /** Nombre pedido para la entidad. */
+    String nombre();
 
-    static int coordenada(Integer valor) {
-        return valor == null ? 0 : valor;
-    }
+    /** Vida pedida, o {@code null} para usar la del constructor simple. */
+    Integer vida();
+
+    /** Coordenada X pedida, o {@code null}. */
+    Integer x();
+
+    /** Coordenada Z pedida, o {@code null}. */
+    Integer z();
 }

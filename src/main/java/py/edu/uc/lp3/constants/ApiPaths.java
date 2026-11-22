@@ -8,13 +8,13 @@ public final class ApiPaths {
     /** CRUD de la familia EntidadMinecraft (Creeper, Aldeano, Enderman). */
     public static final String ENTIDADES = BASE_API + "/entidades";
 
-    /** Lectura polimorfica por el protocolo Explosivo (Creeper + TNT). */
+    /** Lectura polimórfica por el protocolo Explosivo (Creeper + TNT). */
     public static final String EXPLOSIVOS = BASE_API + "/explosivos";
 
     /** Bloques de TNT. */
     public static final String TNT = BASE_API + "/tnt";
 
-    /** Simulacion: cada POST crea una explosion; GET muestra el historial. */
+    /** Simulación: cada POST crea una explosión; GET muestra el historial. */
     public static final String EXPLOSIONES = BASE_API + "/explosiones";
 
     private ApiPaths() {

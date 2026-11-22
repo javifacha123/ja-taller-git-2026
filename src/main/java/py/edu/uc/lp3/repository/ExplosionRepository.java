@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface ExplosionRepository extends JpaRepository<Explosion, Long> {
 
-    /** Historial de explosiones, la mas reciente primero. */
+    /** Historial de explosiones, la más reciente primero. */
     List<Explosion> findAllByOrderByMomentoDesc();
 }

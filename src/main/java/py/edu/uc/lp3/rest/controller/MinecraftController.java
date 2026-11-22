@@ -3,21 +3,26 @@ package py.edu.uc.lp3.rest.controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import py.edu.uc.lp3.domain.Aldeano;
-import py.edu.uc.lp3.domain.Creeper;
-import py.edu.uc.lp3.domain.Enderman;
 import py.edu.uc.lp3.domain.EntidadMinecraft;
-import py.edu.uc.lp3.exceptions.EntidadInvalidaException;
+import py.edu.uc.lp3.service.EntidadService;
 
 import java.util.Map;
 
 /**
- * Endpoint de POO-06 (construccion por parametros de la URL, sin persistir).
- * Se conserva para no romper las pruebas anteriores. Los errores los atiende
- * MinecraftExceptionHandler.
+ * Endpoint de POO-06: construcción por parámetros de la URL, sin persistir.
+ * Se conserva para no romper las pruebas anteriores.
+ *
+ * <p>Solo traduce HTTP: el servicio valida, elige el constructor sobrecargado y
+ * aplica el daño. Los errores los atiende MinecraftExceptionHandler.</p>
  */
 @RestController
 public class MinecraftController {
+
+    private final EntidadService servicio;
+
+    public MinecraftController(EntidadService servicio) {
+        this.servicio = servicio;
+    }
 
     @GetMapping("/minecraft/entidad")
     public Map<String, Object> crearEntidad(
@@ -28,15 +33,7 @@ public class MinecraftController {
             @RequestParam(required = false) Integer danio,
             @RequestParam(required = false) Boolean armadura) {
 
-        EntidadMinecraft entidad = construir(tipo, nombre, vida, bloques);
-
-        if (danio != null) {
-            if (armadura != null) {
-                entidad.recibirDanio(danio, armadura);   // sobrecarga con armadura
-            } else {
-                entidad.recibirDanio(danio);             // sobrecarga simple
-            }
-        }
+        EntidadMinecraft entidad = servicio.armarSinPersistir(tipo, nombre, vida, bloques, danio, armadura);
 
         return Map.of(
                 "nombre", entidad.getNombre(),
@@ -45,27 +42,5 @@ public class MinecraftController {
                 "movimiento", entidad.moverse(),
                 "vivo", entidad.estaVivo()
         );
-    }
-
-    private EntidadMinecraft construir(String tipo, String nombre, Integer vida, Integer bloques) {
-        switch (tipo.toLowerCase()) {
-            case "creeper":
-                return vida == null ? new Creeper(nombre) : new Creeper(nombre, vida);
-            case "aldeano":
-                return vida == null ? new Aldeano(nombre) : new Aldeano(nombre, vida);
-            case "enderman":
-                if (vida == null && bloques == null) {
-                    return new Enderman(nombre);
-                }
-                if (bloques == null) {
-                    return new Enderman(nombre, vida);
-                }
-                if (vida == null) {
-                    throw new EntidadInvalidaException("Para indicar bloques también hay que indicar la vida");
-                }
-                return new Enderman(nombre, vida, bloques);
-            default:
-                throw new EntidadInvalidaException("Tipo de entidad no válido: " + tipo);
-        }
     }
 }
