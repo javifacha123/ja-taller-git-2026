@@ -435,6 +435,8 @@ POST /api/escenarios
 
 Las tres entidades tienen que existir ya en la base: el escenario no las crea, propone una jugada sobre el mundo que hay.
 
+**El escenario no detona el Creeper.** Es a propósito: el escenario somete una jugada *propuesta* a las reglas de los dos compañeros y deja constancia de que es legal; la detonación real es otra operación, `POST /api/explosiones`, que sí consume el explosivo y aplica el daño. Separarlos tiene dos ventajas: el escenario queda **idempotente** (se puede repetir en una demostración sin que el mundo cambie entre intento e intento) y las consultas a A2 y a A3 no tienen efectos secundarios, así que el orden en que se hacen no altera el resultado. Lo único que el escenario escribe es la fila de la jugada.
+
 | Situación | Respuesta | Qué pasa con la base |
 |---|---|---|
 | A2 y A3 aceptan | 201 con la jugada guardada | se inserta una fila en `JUGADA` |
@@ -467,18 +469,63 @@ companeros.a3.ruta=/api/reglas/...
 
 Todo el HTTP hacia afuera vive en una sola clase, `CompaneroClientHttp`, que interpreta la respuesta por el **código de estado** (2xx acepta, 4xx rechaza). Eso la hace servir con cualquier compañero sin importar cómo haya armado su JSON. Los tiempos de espera son cortos (3 s para conectar, 5 s para responder) para que un servicio apagado falle rápido y con un mensaje claro en vez de quedarse colgado.
 
-### Cómo arrancar los tres servicios
+### Qué hay que pensar (respuestas de POO-09)
 
-Cada uno en su propia terminal, desde la carpeta de su repositorio:
+**OpenAPI. ¿Dónde vive su documento? ¿Qué operaciones aparecen, con descripción suficiente para que un extraño las invoque?**
+El documento vive en `/v3/api-docs` (JSON) y navegable en `/swagger-ui.html`. Lo genera `springdoc-openapi` 3.2.1, y sus metadatos están en `config/OpenApiConfig`. Aparecen todas las operaciones agrupadas por `@Tag`: el CRUD de entidades, los bloques de TNT, el endpoint de la interface `Explosivo`, la simulación de explosiones, **mis dos reglas** y el escenario cruzado. La descripción general del documento incluye las **dos fórmulas escritas** y la tabla de códigos de error, y cada operación declara sus respuestas con `@ApiResponse`. Un extraño puede invocar `POST /api/reglas/onda-expansiva` leyendo solo eso: sabe qué campos mandar, qué devuelve al aceptar y con qué código rechaza.
+
+**Escenario. ¿Qué hecho del juego necesita las dos validaciones ajenas para ser legal?**
+Una misma explosión produce **dos hechos distintos** que caen bajo reglas distintas: el Aldeano **recibe daño** (regla de la onda expansiva) y el Enderman **esquiva o no** (regla del teletransporte). La jugada es legal solo si los dos hechos lo son, y cada uno lo valida un compañero diferente. No alcanza con una sola validación porque son dos efectos independientes de la misma detonación.
+
+**¿Qué se ve en la base después de un escenario exitoso?**
+Una fila nueva en la tabla `JUGADA`, que un `GET /api/escenarios` muestra. Guarda el nombre de la jugada, los ids y nombres de las tres entidades, el daño y los bloques calculados, y **el veredicto textual de cada compañero**, para que la jugada siga siendo legible aunque después cambien o se apaguen sus servicios.
+
+**¿Qué queda igual si A2 acepta y A3 rechaza?**
+Todo. `EscenarioServiceImpl.jugar` es `@Transactional`: la excepción de A3 corta el método antes del `save` y Spring revierte la transacción. No hay borrado manual ni compensación; la atomicidad la da la transacción. Verificado: después de provocar el rechazo de A2 y el de A3, el historial seguía mostrando una sola jugada.
+
+**¿En qué orden consulta a A2 y a A3, y por qué?**
+Primero A2 (el daño), después A3 (el esquive). Es el orden del hecho en el juego: la onda llega y produce daño, y recién entonces el Enderman decide si se teletransporta. Además deja ver el caso interesante: cuando A3 rechaza, A2 **ya había aceptado**, y aun así no queda nada escrito. Si el orden se invirtiera el resultado sería el mismo, porque ninguna de las dos consultas modifica estado: son consultas puras.
+
+**Cliente. ¿Cómo configura las URLs de A2 y A3?**
+Con propiedades, bajo el prefijo `companeros`, ligadas por `config/CompanerosProperties`. Se pueden pisar con argumentos al arrancar o con variables de entorno, sin recompilar:
+
+~~~bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--companeros.a2.base-url=http://localhost:8085 --companeros.a2.ruta=/api/reglas/otra"
+~~~
+
+**Errores. ¿Propaga el código y el cuerpo del compañero, o los traduce a su jerarquía?**
+Los **traduce**, pero sin perder el original. Un 4xx ajeno se convierte en `CompaneroRechazoException` → **409 `COMPANERO_RECHAZO`**, y un fallo de conexión en `CompaneroInaccesibleException` → **502 `COMPANERO_INACCESIBLE`**. El cuerpo que mandó el compañero viaja **dentro del campo `mensaje`** de mi JSON de error, así no se pierde la trazabilidad.
+
+Lo traduzco por dos razones. Primero, porque quien consume **mi** API tiene que ver **mis** códigos: no sería coherente que `/api/escenarios` devolviera de golpe un código de error con el vocabulario de otro proyecto. Segundo, porque el significado cambia: para el compañero el pedido fue inválido (400), pero para mi escenario el problema no es el formato sino que el estado del mundo no permite la jugada, y eso es un conflicto (409).
+
+**¿El handler propio distingue «falló la API de A2» de «falló la de A3»?**
+Sí. Las dos excepciones guardan el **rol** (`A2` o `A3`) y el nombre del compañero, y cada una tiene su propio `@ExceptionHandler` en `MinecraftExceptionHandler`. El mensaje empieza con `Rechazo de A2 (...)` o `Rechazo de A3 (...)` y aclara que la jugada no se guardó.
+
+**Pregunta de anclaje: si el compañero cambia el nombre de una ruta, ¿alcanza con actualizar lo que dice el OpenAPI, o había código copiado de su dominio?**
+Alcanza con cambiar **una propiedad** (`companeros.a2.ruta`), y ni siquiera hace falta recompilar: se puede pasar como argumento al arrancar. No hay nada copiado del dominio ajeno en este repositorio: no tengo sus clases, ni sus fórmulas, ni sus DTO. Todo el contacto con sus servicios pasa por una sola clase, `CompaneroClientHttp`, que interpreta la respuesta por el **código de estado HTTP**, no por la forma de su JSON. Por eso un cambio de ruta, de puerto o de formato de respuesta no toca ni una línea de código de dominio.
+
+### Cuando un compañero no responde
+
+El enunciado pide dejar registrado qué se hizo cuando A2 o A3 no estaban disponibles.
+
+- **Contacto:** se pidió por el chat del curso el OpenAPI, las dos reglas y la ruta de validación de cada compañero, indicando los puertos propuestos (yo 8080, A2 8081, A3 8082).
+- **Reintento:** el cliente espera 3 segundos para conectar y 5 para la respuesta. Si no hay nadie, responde **502 `COMPANERO_INACCESIBLE`** diciendo cuál falló, en vez de quedarse colgado.
+- **Respuestas guardadas:** cada pedido de la colección de Insomnia lleva en su descripción la **respuesta verificada**, con el texto exacto del escenario feliz y de los dos rechazos.
+- **Verificación independiente:** el circuito completo se probó apuntando A2 y A3 a este mismo servicio (ver más abajo), así el cliente, el escenario, la persistencia y la atribución del rechazo quedan demostrados aunque un compañero no arranque el día de la corrección.
+
+### Cómo clonar y arrancar los tres
 
 ~~~bash
 # A1 (este repositorio)
-./mvnw spring-boot:run
+git clone https://github.com/javifacha123/ja-taller-git-2026.git
+cd ja-taller-git-2026 && ./mvnw spring-boot:run          # puerto 8080
 
 # A2
+git clone <repositorio de A2> && cd <carpeta de A2>
 ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8081
 
 # A3
+git clone <repositorio de A3> && cd <carpeta de A3>
 ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8082
 ~~~
 
@@ -487,6 +534,8 @@ Si los puertos o las rutas de los compañeros cambian, no hace falta tocar el c�
 ~~~bash
 ./mvnw spring-boot:run -Dspring-boot.run.arguments="--companeros.a2.base-url=http://localhost:8085 --companeros.a2.ruta=/api/reglas/otra"
 ~~~
+
+**Orden para recorrer la colección de Insomnia:** primero tienen que estar arriba **A2 y A3**, y recién después A1. Si A1 arranca solo, el escenario responde 502 en vez de 201 — que es el comportamiento correcto, pero no el que se quiere demostrar.
 
 ### Probar el escenario sin los compañeros
 

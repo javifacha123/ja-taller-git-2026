@@ -73,7 +73,11 @@ prefijo `companeros` en `application.properties` y se pueden pisar al arrancar.
    `CompaneroRechazoException` → 409; `CompaneroInaccesibleException` → 502.
 5. **Las entidades del escenario tienen que existir y ser del tipo correcto.**
    El escenario no las crea: 404 si no existen, 400 si el tipo no corresponde.
-6. **Las dos reglas tienen una sola implementación.** Las fórmulas son métodos
+6. **El escenario no detona el Creeper.** Somete una jugada *propuesta* a las
+   reglas ajenas y deja constancia de que es legal; la detonación real es otra
+   operación (`POST /api/explosiones`). Así el escenario es idempotente y las
+   consultas a A2 y A3 no tienen efectos secundarios.
+7. **Las dos reglas tienen una sola implementación.** Las fórmulas son métodos
    estáticos de `ReglaExplosion`, usados tanto por la simulación interna como
    por los endpoints que consulta un compañero. Si una regla cambia, se toca en
    un solo lugar.
