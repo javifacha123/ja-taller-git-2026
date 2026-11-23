@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 @Table(name = "jugada")
 @JsonPropertyOrder({"id", "nombre", "momento", "creeperId", "aldeanoId", "endermanId",
         "nombreCreeper", "nombreAldeano", "nombreEnderman",
-        "danioAldeano", "bloquesEnderman",
+        "potencia", "radio", "danioAldeano", "bloquesEnderman",
         "companeroA2", "veredictoA2", "companeroA3", "veredictoA3"})
 public class Jugada {
 
@@ -46,7 +46,13 @@ public class Jugada {
     private String nombreAldeano;
     private String nombreEnderman;
 
-    /** Daño que mi regla 1 calcula para el Aldeano, y que A2 validó. */
+    /** Potencia con la que se propuso la detonación, y que A2 validó. */
+    private int potencia;
+
+    /** Radio con el que se propuso la detonación, y que A3 validó. */
+    private int radio;
+
+    /** Daño que mi regla 1 calcula para el Aldeano. */
     private int danioAldeano;
 
     /** Bloques que mi regla 2 calcula para el Enderman, y que A3 validó. */
@@ -67,7 +73,7 @@ public class Jugada {
     }
 
     public Jugada(String nombre, Creeper creeper, EntidadMinecraft aldeano, Enderman enderman,
-                  int danioAldeano, int bloquesEnderman) {
+                  int potencia, int radio, int danioAldeano, int bloquesEnderman) {
         this.nombre = nombre;
         this.momento = LocalDateTime.now();
         this.creeperId = creeper.getId();
@@ -76,6 +82,8 @@ public class Jugada {
         this.nombreCreeper = creeper.getNombre();
         this.nombreAldeano = aldeano.getNombre();
         this.nombreEnderman = enderman.getNombre();
+        this.potencia = potencia;
+        this.radio = radio;
         this.danioAldeano = danioAldeano;
         this.bloquesEnderman = bloquesEnderman;
     }
@@ -123,6 +131,14 @@ public class Jugada {
 
     public String getNombreEnderman() {
         return nombreEnderman;
+    }
+
+    public int getPotencia() {
+        return potencia;
+    }
+
+    public int getRadio() {
+        return radio;
     }
 
     public int getDanioAldeano() {

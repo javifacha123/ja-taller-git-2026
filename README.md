@@ -405,8 +405,10 @@ Según el documento de grupos, los que quedan de a dos forman un **dúo**: cada 
 | Rol | Quién | Usuario de GitHub | Puerto | OpenAPI |
 |---|---|---|---|---|
 | **A1** (yo) | Javier Atlasovich | `javifacha123` | 8080 | <http://localhost:8080/v3/api-docs> |
-| **A2** | _(pendiente de confirmar)_ | — | 8081 | <http://localhost:8081/v3/api-docs> |
-| **A3** | _(pendiente de confirmar)_ | — | 8082 | <http://localhost:8082/v3/api-docs> |
+| **A2** | Adrián Vera | `Adrian-312` | 8081 | <http://localhost:8081/v3/api-docs> |
+| **A3** | Yamil Padilla | `Yamil-Padilla` | 8082 | <http://localhost:8082/v3/api-docs> |
+
+Repositorios: [Adrián](https://github.com/Adrian-312/avera-tplp3-2026) · [Yamil](https://github.com/Yamil-Padilla/yp-taller-git-2026). Los tres servicios son del mismo juego (Minecraft), con dominios distintos.
 
 ### Las reglas citadas
 
@@ -419,14 +421,41 @@ Las dos responden **200** cuando aceptan y **400 `REGLA_RECHAZADA`** cuando rech
 
 **Las reglas que consulto:**
 
-| Rol | Regla | Endpoint |
+| Rol | Regla citada | Endpoint | Cuerpo que espera |
+|---|---|---|---|
+| A2 · Adrián | Un monstruo vivo y hostil explota con una potencia que **no puede superar su máximo**; un monstruo muerto o no hostil no puede explotar | `POST /minecraft/simulacion/explosion` | `{"monstruoId": 1, "potencia": 12}` |
+| A3 · Yamil | El **radio** de una explosión debe estar en `(0, 100]`; el daño decae linealmente con la distancia al centro | `POST /api/explosiones` | `{"x": 0.0, "y": 64.0, "z": 0.0, "radio": 3.0}` |
+
+Las dos rechazan con un código **4xx**, igual que las mías, así que el cliente las interpreta sin casos especiales: Adrián responde **400** y Yamil **422** o **404**.
+
+**Cómo encaja con mi escenario.** Mi Creeper detona con una potencia y un radio determinados. Adrián valida que esa **potencia** sea legal en su modelo y Yamil valida que ese **radio** lo sea en el suyo. Una detonación necesita las dos cosas, así que la jugada solo es legal si los dos aceptan.
+
+**Cómo se provoca cada rechazo.** El escenario acepta dos campos opcionales, `potenciaPropuesta` y `radioPropuesto`, que reemplazan los del Creeper. Sirven para someter a los compañeros una jugada que sus reglas rechacen, con un solo pedido y sin reiniciar nada:
+
+| Rechazo | Cuerpo | Por qué rechaza |
 |---|---|---|
-| A2 | _(pendiente)_ | _(pendiente)_ |
-| A3 | _(pendiente)_ | _(pendiente)_ |
+| **A2** | `{"creeperId":1,"aldeanoId":2,"endermanId":3,"potenciaPropuesta":9999}` | La potencia supera el máximo que admite el monstruo de Adrián |
+| **A3** | `{"creeperId":1,"aldeanoId":2,"endermanId":3,"radioPropuesto":500}` | El radio queda fuera del rango `(0, 100]` de Yamil |
+
+El segundo caso es el interesante para la defensa: **A2 ya aceptó** cuando A3 rechaza, y aun así la base queda igual, porque la transacción revierte.
+
+**El cuerpo que recibe cada compañero es configuración, no código.** Sus reglas usan otro vocabulario que las mías, así que el JSON que se le manda a cada uno se declara en `companeros.aN.cuerpo`: cada clave es un campo de su JSON, y el valor puede ser un literal (un id en SU base, una coordenada fija) o un hecho de mi jugada entre llaves dobles.
+
+~~~properties
+companeros.a2.cuerpo[monstruoId]=1
+companeros.a2.cuerpo[potencia]={{potencia}}
+
+companeros.a3.cuerpo[x]=0.0
+companeros.a3.cuerpo[y]=64.0
+companeros.a3.cuerpo[z]=0.0
+companeros.a3.cuerpo[radio]={{radio}}
+~~~
+
+Los hechos disponibles son `potencia`, `radio`, `distancia`, `distanciaAldeano`, `distanciaEnderman`, `danio`, `bloques`, `bloquesDisponibles`, `x`, `z`, `creeperId`, `aldeanoId` y `endermanId`. Si un compañero renombra un campo, se cambia una propiedad y no se recompila nada.
 
 ### El escenario, en una frase
 
-Un Creeper detona y la onda alcanza a un Aldeano y a un Enderman: **la jugada se guarda solo si A2 acepta el daño que recibe el Aldeano y A3 acepta que el Enderman puede esquivar.**
+Un Creeper detona y la onda alcanza a un Aldeano y a un Enderman: **la jugada se guarda solo si A2 acepta la potencia de la detonación y A3 acepta su radio.**
 
 ~~~http
 POST /api/escenarios
@@ -475,7 +504,7 @@ Todo el HTTP hacia afuera vive en una sola clase, `CompaneroClientHttp`, que int
 El documento vive en `/v3/api-docs` (JSON) y navegable en `/swagger-ui.html`. Lo genera `springdoc-openapi` 3.2.1, y sus metadatos están en `config/OpenApiConfig`. Aparecen todas las operaciones agrupadas por `@Tag`: el CRUD de entidades, los bloques de TNT, el endpoint de la interface `Explosivo`, la simulación de explosiones, **mis dos reglas** y el escenario cruzado. La descripción general del documento incluye las **dos fórmulas escritas** y la tabla de códigos de error, y cada operación declara sus respuestas con `@ApiResponse`. Un extraño puede invocar `POST /api/reglas/onda-expansiva` leyendo solo eso: sabe qué campos mandar, qué devuelve al aceptar y con qué código rechaza.
 
 **Escenario. ¿Qué hecho del juego necesita las dos validaciones ajenas para ser legal?**
-Una misma explosión produce **dos hechos distintos** que caen bajo reglas distintas: el Aldeano **recibe daño** (regla de la onda expansiva) y el Enderman **esquiva o no** (regla del teletransporte). La jugada es legal solo si los dos hechos lo son, y cada uno lo valida un compañero diferente. No alcanza con una sola validación porque son dos efectos independientes de la misma detonación.
+Una detonación queda descrita por **dos magnitudes independientes**: con cuánta fuerza explota (la **potencia**) y hasta dónde llega (el **radio**). Son cosas distintas —se puede tener una potencia legal con un radio imposible, y al revés— y en este grupo cada una cae bajo la regla de un compañero distinto: Adrián acota la potencia a lo que un monstruo puede soportar, y Yamil acota el radio al rango que su modelo admite. Una explosión es legal solo si **las dos** magnitudes lo son, y por eso el escenario necesita las dos validaciones ajenas y no alcanza con una.
 
 **¿Qué se ve en la base después de un escenario exitoso?**
 Una fila nueva en la tabla `JUGADA`, que un `GET /api/escenarios` muestra. Guarda el nombre de la jugada, los ids y nombres de las tres entidades, el daño y los bloques calculados, y **el veredicto textual de cada compañero**, para que la jugada siga siendo legible aunque después cambien o se apaguen sus servicios.

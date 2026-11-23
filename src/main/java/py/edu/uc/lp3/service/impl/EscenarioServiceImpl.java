@@ -3,6 +3,7 @@ package py.edu.uc.lp3.service.impl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import py.edu.uc.lp3.config.CompanerosProperties;
+import py.edu.uc.lp3.config.CompanerosProperties.Companero;
 import py.edu.uc.lp3.domain.Aldeano;
 import py.edu.uc.lp3.domain.Creeper;
 import py.edu.uc.lp3.domain.Enderman;
@@ -20,6 +21,7 @@ import py.edu.uc.lp3.service.ReglaExplosion;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * POO-09: arma la jugada, la somete a las reglas de los dos compañeros y la
@@ -30,8 +32,9 @@ import java.util.Map;
  *   <li>Lee de mi base el Creeper, el Aldeano y el Enderman.</li>
  *   <li>Calcula con MIS reglas qué debería pasar: cuánto daño recibe el
  *       Aldeano (regla 1) y cuántos bloques necesita el Enderman (regla 2).</li>
- *   <li>Le propone a <strong>A2</strong> la mitad del daño y a <strong>A3</strong>
- *       la mitad del esquive. Cada uno responde por SUS reglas.</li>
+ *   <li>Somete la jugada a los dos compañeros, cada uno por SUS reglas. El
+ *       cuerpo que recibe cada uno se declara en {@code companeros.aN.cuerpo},
+ *       porque sus reglas usan otro vocabulario que las mías.</li>
  *   <li>Si los dos aceptan, guarda la {@link Jugada}. Si alguno rechaza, lanza
  *       la excepción y la transacción no deja nada escrito.</li>
  * </ol>
@@ -69,26 +72,100 @@ public class EscenarioServiceImpl implements EscenarioService {
         // Lo que dicen MIS reglas sobre esta jugada.
         double distanciaAldeano = aldeano.distanciaA(creeper.getX(), creeper.getZ());
         double distanciaEnderman = enderman.distanciaA(creeper.getX(), creeper.getZ());
-        int potencia = creeper.potenciaExplosion();
-        int radio = creeper.radioExplosion();
+        // Potencia y radio: los del Creeper, salvo que el pedido proponga otros.
+        int potencia = exigirPositivo(pedido.potenciaPropuesta(), creeper.potenciaExplosion(), "potenciaPropuesta");
+        int radio = exigirPositivo(pedido.radioPropuesto(), creeper.radioExplosion(), "radioPropuesto");
         int danio = ReglaExplosion.danioPorDistancia(potencia, radio, distanciaAldeano);
         int bloques = ReglaExplosion.bloquesNecesarios(radio, distanciaEnderman);
 
-        // A2 valida la mitad del daño; A3, la mitad del esquive.
+        // Los hechos de la jugada, con el nombre por el que los conoce cada
+        // plantilla de cuerpo configurada.
+        Map<String, Object> hechos = new LinkedHashMap<>();
+        hechos.put("potencia", potencia);
+        hechos.put("radio", radio);
+        hechos.put("distancia", redondear(distanciaAldeano));
+        hechos.put("distanciaAldeano", redondear(distanciaAldeano));
+        hechos.put("distanciaEnderman", redondear(distanciaEnderman));
+        hechos.put("danio", danio);
+        hechos.put("bloques", bloques);
+        hechos.put("bloquesDisponibles", enderman.getBloquesTeletransporte());
+        hechos.put("x", creeper.getX());
+        hechos.put("z", creeper.getZ());
+        hechos.put("creeperId", creeper.getId());
+        hechos.put("aldeanoId", aldeano.getId());
+        hechos.put("endermanId", enderman.getId());
+
+        // Cada compañero recibe el cuerpo que declara su plantilla configurada.
         String veredictoA2 = companeroClient.consultar(companeros.getA2(), "A2",
-                cuerpoOnda(potencia, radio, distanciaAldeano, danio));
+                cuerpoPara(companeros.getA2(), hechos,
+                        () -> cuerpoOnda(potencia, radio, distanciaAldeano, danio)));
         String veredictoA3 = companeroClient.consultar(companeros.getA3(), "A3",
-                cuerpoEsquive(potencia, radio, distanciaEnderman, enderman.getBloquesTeletransporte()));
+                cuerpoPara(companeros.getA3(), hechos,
+                        () -> cuerpoEsquive(potencia, radio, distanciaEnderman,
+                                enderman.getBloquesTeletransporte())));
 
         // Solo se llega acá si NINGUNO lanzó: las dos aceptaron.
         String nombre = pedido.nombre() == null || pedido.nombre().isBlank()
                 ? "Jugada sin nombre"
                 : pedido.nombre();
-        Jugada jugada = new Jugada(nombre, creeper, aldeano, enderman, danio, bloques);
+        Jugada jugada = new Jugada(nombre, creeper, aldeano, enderman, potencia, radio, danio, bloques);
         jugada.registrarVeredictos(
                 companeros.getA2().getNombre(), recortar(veredictoA2),
                 companeros.getA3().getNombre(), recortar(veredictoA3));
         return jugadas.save(jugada);
+    }
+
+    /**
+     * Arma el cuerpo que se le manda a un compañero.
+     *
+     * <p>Si el compañero tiene una plantilla configurada en
+     * {@code companeros.aN.cuerpo}, se usa esa: cada valor puede ser un literal
+     * (un id en SU base, una coordenada fija) o un hecho de mi jugada entre
+     * llaves dobles, como {@code {{potencia}}}. Si no hay plantilla, se cae al
+     * cuerpo por defecto, pensado para un compañero con reglas como las mías.</p>
+     *
+     * <p>Gracias a esto, consultar a alguien cuyas reglas usan otro vocabulario
+     * no requiere tocar código: se declara el mapeo en una propiedad.</p>
+     */
+    private Map<String, Object> cuerpoPara(Companero companero, Map<String, Object> hechos,
+                                           Supplier<Map<String, Object>> porDefecto) {
+        Map<String, String> plantilla = companero.getCuerpo();
+        if (plantilla == null || plantilla.isEmpty()) {
+            return porDefecto.get();
+        }
+        Map<String, Object> cuerpo = new LinkedHashMap<>();
+        for (Map.Entry<String, String> campo : plantilla.entrySet()) {
+            cuerpo.put(campo.getKey(), resolver(campo.getValue(), hechos, companero));
+        }
+        return cuerpo;
+    }
+
+    /** Un valor de la plantilla: {{hecho}} se reemplaza; lo demás es literal. */
+    private Object resolver(String valor, Map<String, Object> hechos, Companero companero) {
+        String texto = valor == null ? "" : valor.trim();
+        if (texto.startsWith("{{") && texto.endsWith("}}")) {
+            String hecho = texto.substring(2, texto.length() - 2).trim();
+            Object encontrado = hechos.get(hecho);
+            if (encontrado == null) {
+                throw new EntidadInvalidaException("La plantilla de " + companero.getNombre()
+                        + " pide el hecho '" + hecho + "', que el escenario no calcula. "
+                        + "Los disponibles son: " + hechos.keySet());
+            }
+            return encontrado;
+        }
+        return comoNumeroSiSePuede(texto);
+    }
+
+    /** Un literal numérico viaja como número en el JSON, no como texto. */
+    private static Object comoNumeroSiSePuede(String texto) {
+        try {
+            if (texto.contains(".")) {
+                return Double.valueOf(texto);
+            }
+            return Long.valueOf(texto);
+        } catch (NumberFormatException noEraNumero) {
+            return texto;
+        }
     }
 
     /**
@@ -136,6 +213,17 @@ public class EscenarioServiceImpl implements EscenarioService {
                     + entidad.tipoEntidad() + " y el escenario esperaba " + descripcion);
         }
         return tipo.cast(entidad);
+    }
+
+    /** Usa el valor propuesto si vino, y si no el del Creeper. Siempre > 0. */
+    private static int exigirPositivo(Integer propuesto, int porDefecto, String campo) {
+        if (propuesto == null) {
+            return porDefecto;
+        }
+        if (propuesto <= 0) {
+            throw new EntidadInvalidaException("'" + campo + "' debe ser mayor que 0");
+        }
+        return propuesto;
     }
 
     private static double redondear(double valor) {

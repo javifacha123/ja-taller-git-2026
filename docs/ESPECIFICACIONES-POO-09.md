@@ -24,14 +24,17 @@ trío del mismo juego, que les deja usar su OpenAPI.
 | Rol | Quién | GitHub | Puerto | OpenAPI |
 |---|---|---|---|---|
 | **A1** (yo) | Javier Atlasovich | `javifacha123` | 8080 | `http://localhost:8080/v3/api-docs` |
-| **A2** | _(pendiente de confirmar)_ | — | 8081 | `http://localhost:8081/v3/api-docs` |
-| **A3** | _(pendiente de confirmar)_ | — | 8082 | `http://localhost:8082/v3/api-docs` |
+| **A2** | Adrián Vera | `Adrian-312` | 8081 | `http://localhost:8081/v3/api-docs` |
+| **A3** | Yamil Padilla | `Yamil-Padilla` | 8082 | `http://localhost:8082/v3/api-docs` |
+
+Repositorios: `https://github.com/Adrian-312/avera-tplp3-2026` y
+`https://github.com/Yamil-Padilla/yp-taller-git-2026`.
 
 ## 3. El escenario, en una frase
 
 > Un Creeper detona y la onda alcanza a un Aldeano y a un Enderman: la jugada se
-> guarda **solo si A2 acepta el daño que recibe el Aldeano y A3 acepta que el
-> Enderman puede esquivar.**
+> guarda **solo si A2 acepta la potencia de la detonación y A3 acepta su
+> radio.**
 
 ## 4. URLs
 
@@ -51,10 +54,14 @@ rechazar, igual que el ejemplo del enunciado.
 
 ### Las que consulto
 
-| Rol | Regla citada | Endpoint |
-|---|---|---|
-| A2 | _(pendiente)_ | _(pendiente)_ |
-| A3 | _(pendiente)_ | _(pendiente)_ |
+| Rol | Regla citada | Endpoint | Cuerpo |
+|---|---|---|---|
+| A2 · Adrián | Un monstruo vivo y hostil explota con una potencia que no puede superar su máximo | `POST /minecraft/simulacion/explosion` | `{"monstruoId": 1, "potencia": 12}` |
+| A3 · Yamil | El radio de una explosión debe estar en (0, 100] | `POST /api/explosiones` | `{"x": 0.0, "y": 64.0, "z": 0.0, "radio": 3.0}` |
+
+Adrián valida la **potencia** de mi detonación y Yamil valida su **radio**. Las dos
+rechazan con 4xx (Adrián 400, Yamil 422 o 404), que es como mi cliente interpreta
+el rechazo.
 
 Las URLs **no están escritas a mano en el código**: se configuran con el
 prefijo `companeros` en `application.properties` y se pueden pisar al arrancar.

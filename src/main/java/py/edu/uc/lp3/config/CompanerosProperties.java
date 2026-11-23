@@ -2,6 +2,9 @@ package py.edu.uc.lp3.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * POO-09: a quién consulta mi escenario.
  *
@@ -59,6 +62,23 @@ public class CompanerosProperties {
         /** Dónde está su documento OpenAPI. */
         private String openapi = "";
 
+        /**
+         * Cuerpo JSON que hay que mandarle, declarado como configuración.
+         *
+         * <p>Cada clave es un campo del JSON del compañero. El valor puede ser
+         * un literal (un id en SU base, una coordenada fija) o un hecho de mi
+         * jugada entre llaves dobles, por ejemplo {@code {{potencia}}}.</p>
+         *
+         * <p>Los hechos disponibles son: potencia, radio, distancia,
+         * distanciaAldeano, distanciaEnderman, danio, bloques,
+         * bloquesDisponibles, x, z, creeperId, aldeanoId y endermanId.</p>
+         *
+         * <p>Esto es lo que permite consultar a compañeros cuyas reglas usan
+         * otro vocabulario sin tocar una línea de código: si un compañero
+         * renombra un campo, se cambia una propiedad.</p>
+         */
+        private Map<String, String> cuerpo = new LinkedHashMap<>();
+
         public String getNombre() {
             return nombre;
         }
@@ -105,6 +125,14 @@ public class CompanerosProperties {
 
         public void setOpenapi(String openapi) {
             this.openapi = openapi;
+        }
+
+        public Map<String, String> getCuerpo() {
+            return cuerpo;
+        }
+
+        public void setCuerpo(Map<String, String> cuerpo) {
+            this.cuerpo = cuerpo;
         }
 
         /** true si hay una URL y una ruta cargadas. */

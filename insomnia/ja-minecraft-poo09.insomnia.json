@@ -9,7 +9,7 @@
       "_type": "workspace",
       "parentId": null,
       "name": "JA Minecraft POO-09 (APIs cruzadas)",
-      "description": "Escenario cruzado de POO-09. Antes de recorrerla: arrancar este servicio en 8080, el de A2 en 8081 y el de A3 en 8082, con la base vacía (detener la app y borrar data/). Cada pedido trae en su descripción la respuesta que se verificó.",
+      "description": "Escenario cruzado de POO-09. A1 Javier Atlasovich (8080), A2 Adrián Vera (8081), A3 Yamil Padilla (8082). Antes de recorrerla hay que levantar PRIMERO los servicios de A2 y A3, y después el propio, con la base vacía (detener la app y borrar data/). Cada pedido trae en su descripción la respuesta esperada.",
       "scope": "collection"
     },
     {
@@ -74,10 +74,10 @@
       "_id": "r09_003",
       "_type": "request",
       "parentId": "f09_00",
-      "name": "03 GET OpenAPI de A2",
+      "name": "03 GET OpenAPI de A2 (Adrián)",
       "method": "GET",
       "url": "{{ _.a2_url }}/v3/api-docs",
-      "description": "200 · El documento del compañero A2. Si da error de conexión, su servicio no está arriba.",
+      "description": "200 · Documento de Adrián Vera (Adrian-312), puerto 8081.\nRegla que le consulto: un monstruo vivo y hostil explota con una potencia que no\npuede superar su máximo. Endpoint: POST /minecraft/simulacion/explosion",
       "metaSortKey": 120,
       "headers": [],
       "parameters": [],
@@ -89,10 +89,10 @@
       "_id": "r09_004",
       "_type": "request",
       "parentId": "f09_00",
-      "name": "04 GET OpenAPI de A3",
+      "name": "04 GET OpenAPI de A3 (Yamil)",
       "method": "GET",
       "url": "{{ _.a3_url }}/v3/api-docs",
-      "description": "200 · El documento del compañero A3.",
+      "description": "200 · Documento de Yamil Padilla (Yamil-Padilla), puerto 8082.\nRegla que le consulto: el radio de una explosión debe estar en (0, 100].\nEndpoint: POST /api/explosiones",
       "metaSortKey": 130,
       "headers": [],
       "parameters": [],
@@ -334,7 +334,7 @@
       "name": "01 ESCENARIO FELIZ (201)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios",
-      "description": "201 VERIFICADO · Las dos APIs aceptaron y la jugada quedó guardada con\n\"danioAldeano\":8 y \"bloquesEnderman\":2, con el veredicto de cada compañero registrado.\n\nA2 valida el daño del Aldeano (regla de la onda expansiva).\nA3 valida el esquive del Enderman.",
+      "description": "201 · Las dos APIs aceptan y la jugada queda guardada.\n\nAdrián valida la POTENCIA de la detonación (12) y Yamil valida su RADIO (3).\nComo no se mandan 'potenciaPropuesta' ni 'radioPropuesto', se usan los del\nCreeper, que son legales en los dos modelos.",
       "metaSortKey": 100,
       "headers": [
         {
@@ -369,10 +369,10 @@
       "_id": "r09_023",
       "_type": "request",
       "parentId": "f09_02",
-      "name": "03 RECHAZO DE A2 (409)",
+      "name": "03 RECHAZO DE A2 · potencia ilegal (409)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios",
-      "description": "409 COMPANERO_RECHAZO VERIFICADO · El Aldeano lejano está a 14,14 bloques y el radio es 3,\nasí que la regla de A2 rechaza. El mensaje empieza con 'Rechazo de A2 (...)' y aclara\n'La jugada NO se guardó'. La base queda igual.",
+      "description": "409 COMPANERO_RECHAZO · Se propone detonar con potencia 9999.\nLa regla de Adrián dice que la potencia de un monstruo no puede superar su\nmáximo, así que responde 4xx y mi escenario lo traduce a 409 atribuido a A2.\nEl mensaje empieza con 'Rechazo de A2 (Adrian Vera)' y aclara que NO se guardó.\nLa base queda igual.",
       "metaSortKey": 120,
       "headers": [
         {
@@ -385,17 +385,17 @@
       "settingEncodeUrl": true,
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"nombre\": \"Fuera de alcance\",\n  \"creeperId\": 1,\n  \"aldeanoId\": 4,\n  \"endermanId\": 3\n}"
+        "text": "{\n  \"nombre\": \"Potencia imposible\",\n  \"creeperId\": 1,\n  \"aldeanoId\": 2,\n  \"endermanId\": 3,\n  \"potenciaPropuesta\": 9999\n}"
       }
     },
     {
       "_id": "r09_024",
       "_type": "request",
       "parentId": "f09_02",
-      "name": "04 RECHAZO DE A3 (409)",
+      "name": "04 RECHAZO DE A3 · radio ilegal (409)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios",
-      "description": "409 COMPANERO_RECHAZO VERIFICADO · Ese Enderman tiene 1 bloque y necesita 2, así que la\nregla de A3 rechaza. El mensaje empieza con 'Rechazo de A3 (...)'.\nNotar que A2 YA había aceptado: la transacción igual no deja nada escrito.",
+      "description": "409 COMPANERO_RECHAZO · Se propone detonar con radio 500.\nLa regla de Yamil exige que el radio esté en (0, 100], así que responde 422 y\nmi escenario lo traduce a 409 atribuido a A3.\nImportante: A2 YA había aceptado cuando A3 rechaza, y aun así la transacción no\ndeja nada escrito. Eso es lo que prueba el pedido siguiente.",
       "metaSortKey": 130,
       "headers": [
         {
@@ -408,7 +408,7 @@
       "settingEncodeUrl": true,
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"nombre\": \"Esquive imposible\",\n  \"creeperId\": 1,\n  \"aldeanoId\": 2,\n  \"endermanId\": 5\n}"
+        "text": "{\n  \"nombre\": \"Radio imposible\",\n  \"creeperId\": 1,\n  \"aldeanoId\": 2,\n  \"endermanId\": 3,\n  \"radioPropuesto\": 500\n}"
       }
     },
     {
@@ -489,7 +489,7 @@
       "name": "03 Compañero caído (502)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios",
-      "description": "502 COMPANERO_INACCESIBLE · Para provocarlo, apagar el servicio de A2 o arrancar este\ncon --companeros.a2.base-url=http://localhost:9999 y repetir el escenario feliz.\nEl mensaje distingue 'no hubo respuesta' de 'me dijeron que no', y la base queda igual.",
+      "description": "502 COMPANERO_INACCESIBLE · Para provocarlo, apagar el servicio de Adrián (8081)\no de Yamil (8082) y repetir el escenario feliz. El mensaje distingue 'no hubo\nrespuesta' de 'me dijeron que no', dice cuál de los dos falló, y la base queda igual.",
       "metaSortKey": 120,
       "headers": [
         {
