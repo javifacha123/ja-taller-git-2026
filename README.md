@@ -2,9 +2,23 @@
 
 ## Taller Git 2026 - Minecraft
 
-Servicio HTTP con Spring Boot (Java 21, Maven) que modela entidades de Minecraft con herencia, sobreescritura, sobrecarga, polimorfismo y ocultamiento de información. Desde el ejercicio **POO-08** el servicio guarda su estado en una base **H2**, expone un **CRUD REST** de la familia `EntidadMinecraft`, simula **explosiones** con dos reglas del juego y traduce una **jerarquía de excepciones** del dominio a respuestas HTTP.
+Servicio HTTP con Spring Boot (Java 21, Maven) que modela entidades de Minecraft con herencia, sobreescritura, sobrecarga, polimorfismo y ocultamiento de información. Desde el ejercicio **POO-08** el servicio guarda su estado en una base **H2**, expone un **CRUD REST** de la familia `EntidadMinecraft`, simula **explosiones** con dos reglas del juego y traduce una **jerarquía de excepciones** del dominio a respuestas HTTP. Desde **POO-09** publica su **OpenAPI**, expone sus dos reglas para que las consulte otro servicio y suma un **escenario** que solo se persiste si las APIs de dos compañeros lo aceptan.
 
 **Licencia:** Apache License 2.0 (ver archivo `LICENSE`).
+
+---
+
+## Situación de POO-08 (observaciones cerradas)
+
+POO-08 se corrigió con **19/24 → 7.9/10**. El documento de corrección dejó tres observaciones; las tres están cerradas en este repositorio, en el commit `POO-08: cierra observaciones de la corrección`.
+
+| # | Observación del docente | Cómo se cerró | Dónde verlo |
+|---|---|---|---|
+| 1 | **Faltaba la capa de servicios en el CRUD.** `EntidadController`, `TntController`, `ExplosivoController` y `ExplosionController` inyectaban repositorios directamente; solo la simulación pasaba por un service. | Se crearon los contratos `EntidadService`, `TntService` y `ExplosivoService` (y se amplió `SimulacionService`) con sus implementaciones en `service.impl`. Los **cinco** controllers quedaron sin una sola referencia a un repositorio: solo llaman al service, y las transacciones viven en la capa de servicios. | `service/`, `service/impl/`, `rest/controller/` |
+| 2 | **El dominio lanzaba excepciones y tenía lógica de negocio.** Había siete `throw` en `domain/` (cuatro en `EntidadMinecraft`, uno en `Enderman`, uno en `Creeper`, uno en `BloqueTnt`) y las reglas del juego vivían en las entities. | Las entities quedaron **solo con estado**: cero `throw` en `domain/` y cero en `rest/dto/`. Las validaciones pasaron a `EntidadServiceImpl`, el control de «un explosivo detona una sola vez» a `SimulacionServiceImpl`, y las dos reglas del juego a una jerarquía propia de la capa de servicios (`ReglaExplosion` abstracta, con `ReglaOndaExpansiva` y `ReglaEsquiveEnderman`). | `domain/`, `service/ReglaExplosion.java`, `service/impl/` |
+| 3 | **Documentación.** El README decía que los constructores simples delegaban con `this(...)`, pero `Creeper` y `Aldeano` llamaban a `super(...)` directo; además había errores de ortografía en el Javadoc (`polimorfica`, `mas`, `comun`, `ademas`). | Se corrigió el **código** para que el README sea exacto: ahora las cuatro clases de la familia delegan con `this(...)` y un solo constructor por clase llama a `super(...)`. Se barrieron las tildes de todo el repositorio (39 correcciones en Javadoc, comentarios y `application.properties`) y se reescribió el Javadoc que la refactorización dejó desactualizado. | `domain/`, este README |
+
+**Verificación.** La refactorización **no cambió el comportamiento observable**: las fórmulas de las dos reglas y los mensajes de error son idénticos. Se comprobó contra una base en memoria reproduciendo el escenario que verificó la corrección: el Creeper le hace 8 de daño a Testificate (vida 20 → 12), Slender esquiva gastando 2 bloques y salta a (4,0) con 6 bloques, la TNT le hace 9 de daño a Testificate (vida 3) y Slender vuelve a esquivar gastando 4 bloques hasta (8,0); los tres errores siguen respondiendo `EXPLOSION_IMPOSIBLE` (409), `ENTIDAD_INVALIDA` (400) y `ENTIDAD_NO_ENCONTRADA` (404).
 
 ---
 
@@ -45,17 +59,26 @@ py.edu.uc.lp3
 ├── constants        ApiPaths (todas las rutas de la API)
 ├── domain           EntidadMinecraft, Creeper, Aldeano, Enderman  (familia persistida)
 │                    Explosivo (interface), BloqueTnt, Explosion, Impacto
+├── config          OpenApiConfig (metadatos del documento OpenAPI)
 ├── exceptions       MinecraftException + EntidadInvalidaException,
-│                    EntidadNoEncontradaException, ExplosionImposibleException
+│                    EntidadNoEncontradaException, ExplosionImposibleException,
+│                    ReglaRechazadaException
 ├── repository       EntidadMinecraftRepository, CreeperRepository,
 │                    BloqueTntRepository, ExplosionRepository   (solo interfaces)
-├── service          SimulacionService (interface)
-│   └── impl         SimulacionServiceImpl (transacción de la simulación)
+├── service          EntidadService, TntService, ExplosivoService, SimulacionService,
+│   │                ReglaService            (contratos)
+│   │                ReglaExplosion          (contrato abstracto de una regla del juego)
+│   └── impl         EntidadServiceImpl, TntServiceImpl, ExplosivoServiceImpl,
+│                    SimulacionServiceImpl, ReglaServiceImpl    (lógica y transacciones)
+│                    ReglaOndaExpansiva, ReglaEsquiveEnderman   (las dos reglas)
 └── rest
     ├── controller   IndexController, EntidadController, ExplosivoController,
-    │                TntController, ExplosionController, MinecraftController (POO-06)
+    │                TntController, ExplosionController, ReglaController,
+    │                MinecraftController (POO-06)
     ├── dto          EntidadRequest (+ CreeperRequest, AldeanoRequest, EndermanRequest),
-    │                EntidadPatch, TntRequest, SimulacionRequest, ExplosivoResumen, ErrorRespuesta
+    │                EntidadPatch, TntRequest, SimulacionRequest, ExplosivoResumen,
+    │                OndaExpansivaRequest, EsquiveEndermanRequest, VeredictoRegla,
+    │                ErrorRespuesta
     └── handler      MinecraftExceptionHandler (un @ExceptionHandler por tipo)
 ~~~
 
@@ -65,7 +88,7 @@ py.edu.uc.lp3
 classDiagram
     direction TB
 
-    %% ---------- Familia persistida (herencia) ----------
+    %% ---------- Familia persistida: SOLO ESTADO ----------
     class EntidadMinecraft {
         <<abstract>>
         -Long id
@@ -78,13 +101,13 @@ classDiagram
         +EntidadMinecraft(String nombre, int vida)
         +EntidadMinecraft(String nombre, int vida, int x, int z)
         +moverse() String*
-        +recibirDanio(int dano)
-        +recibirDanio(int dano, boolean conArmadura)
-        +recibirExplosion(Explosivo fuente) Impacto
-        +renombrar(String nombre)
-        +moverA(int x, int z)
+        +aplicarDanio(int danio)
+        +aplicarDanio(int danio, boolean conArmadura)
         +estaVivo() boolean
+        +distanciaA(int x, int z) double
         +desaparecer()
+        +renombrar(String nombre)
+        +ubicarEn(int x, int z)
     }
     class Creeper {
         -Boolean cargado
@@ -94,7 +117,6 @@ classDiagram
         +Creeper(String nombre, int vida, int x, int z)
         +Creeper(String nombre, int vida, int x, int z, boolean cargado)
         +moverse() String
-        +detonar()
     }
     class Aldeano {
         +Aldeano(String nombre)
@@ -109,19 +131,19 @@ classDiagram
         +Enderman(String nombre, int vida, int bloques)
         +Enderman(String nombre, int vida, int bloques, int x, int z)
         +moverse() String
-        +recibirExplosion(Explosivo fuente) Impacto
+        +gastarBloques(int bloques)
     }
     EntidadMinecraft <|-- Creeper
     EntidadMinecraft <|-- Aldeano
     EntidadMinecraft <|-- Enderman
 
-    %% ---------- Protocolo de dominio (implementación) ----------
+    %% ---------- Protocolo de dominio ----------
     class Explosivo {
         <<interface>>
         +potenciaExplosion() int
         +radioExplosion() int
         +puedeExplotar() boolean
-        +detonar()
+        +consumir()
         +nombreExplosivo() String
         +tipoExplosivo() String
     }
@@ -138,16 +160,70 @@ classDiagram
 
     class Explosion {
         <<entity>>
-        +provocar(Explosivo fuente, List entidades) Explosion$
+        +Explosion(Explosivo fuente)
+        +registrar(Impacto impacto)
     }
     class Impacto {
         <<embeddable>>
     }
     Explosion *-- Impacto : impactos
-    Explosion ..> Explosivo : detona
-    Explosion ..> EntidadMinecraft : recibirExplosion
 
-    %% ---------- Repositorios (uso) ----------
+    %% ---------- Las DOS REGLAS: herencia y sobreescritura en el service ----------
+    class ReglaExplosion {
+        <<abstract>>
+        +corresponde(EntidadMinecraft e) boolean*
+        +aplicar(EntidadMinecraft e, Explosivo f) Impacto*
+        #alcanzada(EntidadMinecraft e, Explosivo f) boolean
+        +danioPorDistancia(int p, int r, double d) int$
+        +bloquesNecesarios(int r, double d) int$
+    }
+    class ReglaOndaExpansiva {
+        +corresponde(EntidadMinecraft e) boolean
+        +aplicar(EntidadMinecraft e, Explosivo f) Impacto
+    }
+    class ReglaEsquiveEnderman {
+        +corresponde(EntidadMinecraft e) boolean
+        +aplicar(EntidadMinecraft e, Explosivo f) Impacto
+    }
+    ReglaExplosion <|-- ReglaOndaExpansiva
+    ReglaOndaExpansiva <|-- ReglaEsquiveEnderman
+    ReglaExplosion ..> EntidadMinecraft : cambia su estado
+
+    %% ---------- Capa de servicios ----------
+    class EntidadService {
+        <<interface>>
+        +crear(EntidadRequest p) EntidadMinecraft
+        +listar(String nombre, boolean vivas) List
+        +buscar(Long id) EntidadMinecraft
+        +actualizar(Long id, EntidadPatch c) EntidadMinecraft
+        +borrar(Long id)
+    }
+    class SimulacionService {
+        <<interface>>
+        +explotar(String tipo, Long id) Explosion
+        +historial() List
+    }
+    class ReglaService {
+        <<interface>>
+        +evaluarOndaExpansiva(OndaExpansivaRequest p) VeredictoRegla
+        +evaluarEsquiveEnderman(EsquiveEndermanRequest p) VeredictoRegla
+    }
+    class EntidadServiceImpl {
+        <<Service>>
+    }
+    class SimulacionServiceImpl {
+        <<Service>>
+    }
+    class ReglaServiceImpl {
+        <<Service>>
+    }
+    EntidadService <|.. EntidadServiceImpl
+    SimulacionService <|.. SimulacionServiceImpl
+    ReglaService <|.. ReglaServiceImpl
+    SimulacionServiceImpl --> ReglaExplosion : elige la regla
+    ReglaServiceImpl ..> ReglaExplosion : usa las formulas
+
+    %% ---------- Repositorios ----------
     class EntidadMinecraftRepository {
         <<interface>>
         +findByVidaGreaterThan(int vida) List
@@ -157,21 +233,18 @@ classDiagram
         <<interface>>
     }
     JpaRepository <|-- EntidadMinecraftRepository
+    EntidadServiceImpl --> EntidadMinecraftRepository : usa
+    SimulacionServiceImpl --> EntidadMinecraftRepository : usa
 
+    %% ---------- Controllers: solo traducen HTTP ----------
     class EntidadController
-    class ExplosivoController
     class ExplosionController
-    class SimulacionService {
-        <<interface>>
-        +explotar(String tipo, Long id) Explosion
-    }
-    EntidadController --> EntidadMinecraftRepository : usa
-    EntidadController ..> EntidadMinecraft : mensajes
-    ExplosivoController ..> Explosivo : lista por la interface
+    class ReglaController
+    EntidadController --> EntidadService : usa
     ExplosionController --> SimulacionService : usa
-    SimulacionService ..> Explosion : provocar
+    ReglaController --> ReglaService : usa
 
-    %% ---------- Jerarquía de excepciones ----------
+    %% ---------- Jerarquia de excepciones ----------
     class MinecraftException {
         <<abstract>>
         +getCodigo() String*
@@ -179,9 +252,11 @@ classDiagram
     class EntidadInvalidaException
     class EntidadNoEncontradaException
     class ExplosionImposibleException
+    class ReglaRechazadaException
     MinecraftException <|-- EntidadInvalidaException
     MinecraftException <|-- EntidadNoEncontradaException
     MinecraftException <|-- ExplosionImposibleException
+    MinecraftException <|-- ReglaRechazadaException
     class MinecraftExceptionHandler {
         <<RestControllerAdvice>>
     }
@@ -190,10 +265,12 @@ classDiagram
 
 **Cómo leer el diagrama**
 
-- **Herencia** (`<|--`, flecha llena): `Creeper`, `Aldeano` y `Enderman` *son una* `EntidadMinecraft`; `EntidadMinecraftRepository` *es un* `JpaRepository`.
-- **Implementación de interface** (`<|..`, flecha punteada con triángulo): `Creeper` y `BloqueTnt` cumplen el protocolo `Explosivo` aunque son de familias distintas.
-- **Uso del repositorio** (`-->` "usa"): el controller depende de la interfaz `EntidadMinecraftRepository`, nunca de una clase concreta; Spring inyecta la implementación generada.
-- **Jerarquía de excepciones** (abajo): `MinecraftException` es la base abstracta y no comprobada; las tres hijas nombran la regla que falló y el handler atiende cada una por separado.
+- **Las entities solo guardan estado.** `EntidadMinecraft` y sus hijas no validan, no lanzan excepciones y no deciden reglas: exponen `moverse()` (que es cómo se describen a sí mismas, no una regla) y mensajes que cambian su estado. Quien decide es la capa de servicios.
+- **Herencia** (`<|--`, flecha llena): `Creeper`, `Aldeano` y `Enderman` *son una* `EntidadMinecraft`. También `ReglaEsquiveEnderman` *es una* `ReglaOndaExpansiva`, y por eso puede delegar en `super.aplicar(...)` cuando el esquive no se puede pagar.
+- **Implementación de interface** (`<|..`): `Creeper` y `BloqueTnt` cumplen el protocolo `Explosivo` aunque son familias distintas; cada `ServiceImpl` cumple su contrato de `service`.
+- **Las tres capas** se leen de abajo hacia arriba en el bloque de controllers: `Controller → Service → Repository`. Ningún controller toca un repositorio.
+- **Las dos reglas viven en el service.** `SimulacionServiceImpl` recorre las reglas y usa la primera que dice `corresponde(...)`: no pregunta de qué tipo es la entidad. Las fórmulas son métodos estáticos de `ReglaExplosion` (subrayados en el diagrama), así la simulación interna y el endpoint que consulta un compañero usan el mismo código.
+- **Jerarquía de excepciones**: `MinecraftException` es la base abstracta y no comprobada; las cuatro hijas nombran la regla que falló y el handler atiende cada una por separado.
 
 ## Endpoints
 
@@ -211,6 +288,10 @@ classDiagram
 | POST | `/api/explosiones` | **Simulación**: detona `{tipoExplosivo, explosivoId}` | 201 / 400 / 404 / 409 |
 | GET | `/api/explosiones`, `/api/explosiones/{id}` | Historial persistido de explosiones | 200 / 404 |
 | GET | `/minecraft/entidad?...` | Endpoint de POO-06 (no persiste), se conserva | 200 / 400 |
+| GET | `/v3/api-docs` | **POO-09**: documento OpenAPI 3 de este servicio (JSON) | 200 |
+| GET | `/swagger-ui.html` | **POO-09**: el mismo documento, navegable | 200 |
+| POST | `/api/reglas/onda-expansiva` | **POO-09**: mi regla 1, para que la consulte otro servicio | 200 / 400 |
+| POST | `/api/reglas/esquive-enderman` | **POO-09**: mi regla 2, para que la consulte otro servicio | 200 / 400 |
 
 Ejemplo de creación (el subtipo se elige con `tipo`):
 
@@ -229,8 +310,10 @@ Ejemplo de JSON de error (igual para todos los handlers):
 
 Participan tres clases de la familia: **`Creeper`** (explota), **`Aldeano`** (recibe el daño) y **`Enderman`** (esquiva). La `BloqueTnt` es una segunda fuente de explosión gracias a la interface `Explosivo`.
 
-1. **Onda expansiva** (`EntidadMinecraft.recibirExplosion`): cuando un `Explosivo` detona, toda entidad viva a una distancia `d` menor o igual al radio recibe `ceil(potencia × (radio + 1 − d) / (radio + 1))` de daño y el explosivo se consume (el Creeper queda con vida 0 y `explotado = true`).
-2. **Esquive del Enderman** (`Enderman.recibirExplosion`, sobreescribe la regla 1): si la onda alcanza a un Enderman y le quedan al menos `ceil(radio + 1 − d)` bloques de teletransporte, los gasta, aparece justo afuera del radio y no recibe daño; si no le alcanzan, recibe el daño normal.
+1. **Onda expansiva** (`service.impl.ReglaOndaExpansiva`): cuando un `Explosivo` detona, toda entidad viva a una distancia `d` menor o igual al radio recibe `ceil(potencia × (radio + 1 − d) / (radio + 1))` de daño y el explosivo se consume (el Creeper queda con vida 0 y `explotado = true`).
+2. **Esquive del Enderman** (`service.impl.ReglaEsquiveEnderman`, que hereda de la regla 1 y **sobreescribe** `aplicar`): si la onda alcanza a un Enderman y le quedan al menos `ceil(radio + 1 − d)` bloques de teletransporte, los gasta, aparece justo afuera del radio y no recibe daño; si no le alcanzan, delega en `super.aplicar(...)` y recibe el daño normal.
+
+Desde POO-08 las reglas **ya no viven en las entities**: son una jerarquía propia de la capa de servicios. `SimulacionServiceImpl` recorre las reglas y aplica la primera que dice `corresponde(...)`, así que agregar un mob con otra reacción es agregar una regla, no tocar un `if`. Las dos fórmulas son métodos estáticos de `ReglaExplosion` y las comparten la simulación interna y los endpoints de `/api/reglas`.
 
 | Explosivo | Potencia | Radio |
 |---|---|---|
@@ -251,21 +334,22 @@ Participan tres clases de la familia: **`Creeper`** (explota), **`Aldeano`** (re
 
 **Sobrecarga** (misma clase, mismo nombre, otra lista de argumentos):
 
-- Constructores: `EntidadMinecraft`, `Creeper` y `Aldeano` tienen `(nombre)`, `(nombre, vida)` y, desde POO-08, `(nombre, vida, x, z)`. `Creeper` suma `(nombre, vida, x, z, cargado)`. `Enderman` tiene cuatro: `(nombre)`, `(nombre, vida)`, `(nombre, vida, bloques)` y `(nombre, vida, bloques, x, z)`. Los simples delegan con `this(...)` y las hijas llaman a `super(...)`. Todos validan, así que el objeto nunca queda en un estado ilegal. El DTO de cada subtipo elige el constructor según los campos que vienen en el JSON.
-- Mensaje del dominio: `recibirDanio(int dano)` y `recibirDanio(int dano, boolean conArmadura)`.
+- Constructores: `EntidadMinecraft`, `Creeper` y `Aldeano` tienen `(nombre)`, `(nombre, vida)` y, desde POO-08, `(nombre, vida, x, z)`. `Creeper` suma `(nombre, vida, x, z, cargado)`. `Enderman` tiene cuatro: `(nombre)`, `(nombre, vida)`, `(nombre, vida, bloques)` y `(nombre, vida, bloques, x, z)`. En las cuatro clases **los constructores simples delegan con `this(...)`** y hay **uno solo por clase que llama a `super(...)`**: el completo. Así la inicialización queda en un único lugar.
+- Mensaje de la entidad: `aplicarDanio(int danio)` y `aplicarDanio(int danio, boolean conArmadura)`; con armadura, el daño que llega a la vida es la mitad.
+- Quién valida: desde que se cerró la observación 2 de POO-08, **los constructores no validan**. Valida `EntidadServiceImpl`, que tiene una fábrica privada por cada firma (`nuevoCreeper(...)`, `nuevoEnderman(...)`...) que comprueba los valores y recién entonces construye. Como ningún otro paquete construye entidades, no hay camino que saltee la validación.
 
 **Sobreescritura** (clase hija, misma firma, implementación propia):
 
-- `moverse()` sigue siendo abstracto en `EntidadMinecraft` y lo sobreescriben `Creeper`, `Aldeano` y `Enderman`.
-- `recibirExplosion(Explosivo)` está implementado en `EntidadMinecraft` (regla 1) y `Enderman` lo sobreescribe (regla 2). `Explosion.provocar` recorre una `List<EntidadMinecraft>` y el despacho dinámico decide cuál se ejecuta.
+- `moverse()` sigue siendo abstracto en `EntidadMinecraft` y lo sobreescriben `Creeper`, `Aldeano` y `Enderman`. Se quedó en el dominio porque es cómo la entidad se describe a sí misma, no una regla del juego: no valida, no depende de otra entidad y no decide nada.
+- `aplicar(EntidadMinecraft, Explosivo)` está implementado en `ReglaOndaExpansiva` (regla 1) y `ReglaEsquiveEnderman` lo **sobreescribe** (regla 2). Cuando al Enderman no le alcanzan los bloques, la regla 2 llama a `super.aplicar(...)` en vez de repetir la cuenta del daño.
 - `Creeper` y `BloqueTnt` implementan los métodos de `Explosivo` cada uno a su manera.
 
 **Cómo se distinguen:** la sobrecarga se resuelve en tiempo de compilación según los argumentos y ocurre dentro de una misma clase. La sobreescritura se resuelve en ejecución según el tipo real del objeto y ocurre entre una clase padre y sus hijas (o entre una interface y sus implementaciones).
 
 ## Ocultamiento frente al JSON y frente a JPA
 
-- No hay setters públicos de `vida`, `x`, `z` ni `nombre`. Cambian solo por mensajes: `recibirDanio`, `recibirExplosion`, `desaparecer`, `moverA`, `renombrar`. El único "setter", `Enderman.setBloquesTeletransporte`, valida igual que el constructor.
-- **JSON → objeto:** Jackson nunca arma una entidad. Recibe un *record* DTO y ese DTO llama al constructor, que es quien valida. Un `POST` con `vida: -5` lanza la excepción antes de `repositorio.save`, así que la tabla no cambia.
+- No hay setters públicos de `vida`, `x`, `z` ni `nombre`. Cambian solo por mensajes: `aplicarDanio`, `desaparecer`, `ubicarEn`, `renombrar`, `gastarBloques`. Esos mensajes no validan a propósito: validar es tarea del service, que es el único que los llama.
+- **JSON → objeto:** Jackson nunca arma una entidad. Recibe un *record* DTO, que también es solo datos, y el **service** decide qué constructor usar después de validar. Un `POST` con `vida: -5` lanza la excepción antes de `repositorio.save`, así que la tabla no cambia.
 - **Fila → objeto:** JPA necesita un constructor sin argumentos; está declarado `protected`, así que solo lo ven el paquete `domain` y las clases hijas; ni el controller ni los DTO pueden fabricar un objeto vacío. JPA lee y escribe los campos por reflexión (el `@Id` está en un campo), sin pasar por setters.
 
 ## Qué hay que pensar (respuestas)
@@ -280,7 +364,7 @@ Participan tres clases de la familia: **`Creeper`** (explota), **`Aldeano`** (re
 
 **Protocolo del dominio.** La interface es `Explosivo`. La implementan `Creeper` (un mob, de la familia `EntidadMinecraft`) y `BloqueTnt` (un bloque, otra familia). `GET /api/explosivos` junta ambas en una `List<Explosivo>` y arma el JSON solo con mensajes de la interfaz; `Explosion.provocar` también recibe un `Explosivo`, por eso la misma simulación sirve para Creepers y para TNT.
 
-**Ocultamiento.** Las reglas numéricas las sostienen las clases del dominio: el constructor rechaza vida ≤ 0 y nombre vacío, `recibirDanio` rechaza daño negativo y no deja la vida bajo 0, `Enderman` rechaza bloques negativos, `detonar` rechaza un explosivo ya usado. La prueba de Insomnia es `02 · Pedidos ilegales → 01 POST ilegal` seguido de `02 GET lista (no creció)`: devuelve 400 y la lista tiene la misma cantidad de entidades que antes.
+**Ocultamiento.** Los campos siguen siendo privados y sin setters, así que desde afuera de la jerarquía nadie escribe `vida` ni `x` directamente. Lo que cambió al cerrar la observación 2 de POO-08 es **quién sostiene las reglas numéricas**: ya no el constructor, sino la capa de servicios. `EntidadServiceImpl` rechaza vida ≤ 0, nombre vacío, bloques negativos y daño negativo; `SimulacionServiceImpl` rechaza un explosivo ya usado. El efecto para quien consume la API es el mismo, porque el service es el único camino hacia las entities. La prueba de Insomnia es `02 · Pedidos ilegales → 01 POST ilegal` seguido de `02 GET lista (no creció)`: devuelve 400 y la lista tiene la misma cantidad de entidades que antes.
 
 **PUT y PATCH.** Usé **PATCH**: actualiza un subconjunto de campos (`nombre`, `x`, `z`, `bloquesTeletransporte`). Un campo omitido (o `null`) queda como estaba. No hay PUT porque reemplazar el recurso entero implicaría poder escribir la `vida`, que solo cambia por las reglas del juego; si un PATCH trae `vida`, se responde 400.
 
@@ -288,11 +372,12 @@ Participan tres clases de la familia: **`Creeper`** (explota), **`Aldeano`** (re
 
 **Dos reglas.** Una explosión cambia a la vez el estado del explosivo (se consume), de cada entidad alcanzada (pierde vida) y del Enderman (pierde bloques y cambia de posición). El recurso HTTP es `/api/explosiones`: un `POST` crea una explosión (201) y queda guardada; `GET /api/entidades` y `GET /api/explosiones` muestran después el estado ya persistido.
 
-**Excepciones.** `MinecraftException` (base abstracta) y sus hijas: `EntidadInvalidaException` (un valor rompe un invariante → 400), `EntidadNoEncontradaException` (el id no existe → 404) y `ExplosionImposibleException` (el pedido es correcto pero el estado del mundo no lo permite → 409). Un recurso inexistente y una regla incumplida **sí** son tipos distintos: uno es un problema de la URL y el otro del estado del juego. El JSON de error lleva `error` (código de la excepción), `excepcion`, `estado`, `mensaje`, `ruta` y `momento`. Las excepciones son **no comprobadas** (`RuntimeException`): las lanzan constructores y mensajes del dominio, que no deberían llenar sus firmas de `throws`, y Spring revierte la transacción de la simulación ante una `RuntimeException` sin configuración extra. Cada una tiene su propio `@ExceptionHandler` en `MinecraftExceptionHandler` (`@RestControllerAdvice`); Spring elige el handler del tipo más específico.
+**Excepciones.** `MinecraftException` (base abstracta) y sus hijas: `EntidadInvalidaException` (un valor rompe un invariante → 400), `EntidadNoEncontradaException` (el id no existe → 404) y `ExplosionImposibleException` (el pedido es correcto pero el estado del mundo no lo permite → 409). Un recurso inexistente y una regla incumplida **sí** son tipos distintos: uno es un problema de la URL y el otro del estado del juego. El JSON de error lleva `error` (código de la excepción), `excepcion`, `estado`, `mensaje`, `ruta` y `momento`. Desde POO-09 hay una cuarta hija, `ReglaRechazadaException` (una de mis dos reglas rechaza la jugada que me proponen → 400). Las excepciones son **no comprobadas** (`RuntimeException`): las lanza la capa de servicios al validar un pedido o al aplicar una regla, y obligar a declarar `throws` en cada firma de servicio ensuciaría el contrato; además Spring revierte la transacción de la simulación ante una `RuntimeException` sin configuración extra. Cada una tiene su propio `@ExceptionHandler` en `MinecraftExceptionHandler` (`@RestControllerAdvice`); Spring elige el handler del tipo más específico.
 
 **Preguntas de anclaje.**
 - *Si mañana cambiamos H2 por otra base, ¿qué archivos se tocan?* Solo `pom.xml` (el driver) y `application.properties` (URL, usuario, dialecto). Dominio, repositorios, controllers y la colección de Insomnia quedan quietos.
-- *¿Quién lanza la excepción, el controller o el objeto del juego?* El objeto del juego (constructores, `detonar`, `moverA`...). El controller solo lanza `EntidadNoEncontradaException` cuando el repositorio no encuentra el id; el handler traduce todo a HTTP.
+- *¿Quién lanza la excepción, el controller o el objeto del juego?* **Ninguno de los dos: la capa de servicios.** Ésta fue la observación 2 de la corrección de POO-08. Las entities quedaron solo con estado y los controllers solo traducen HTTP; `EntidadServiceImpl`, `SimulacionServiceImpl` y `ReglaServiceImpl` son los únicos que validan y lanzan, y el handler traduce cada tipo a su código HTTP.
+- *Si cambia una de las dos reglas del juego, ¿dónde se toca?* En un solo lugar: las fórmulas son métodos estáticos de `ReglaExplosion`. Las usan tanto la simulación interna como los endpoints de `/api/reglas` que consulta un compañero, así que las dos puertas quedan de acuerdo solas.
 
 ## Colección de Insomnia
 

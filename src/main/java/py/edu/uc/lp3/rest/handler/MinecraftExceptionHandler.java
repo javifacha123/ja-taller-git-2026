@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import py.edu.uc.lp3.exceptions.CompaneroInaccesibleException;
+import py.edu.uc.lp3.exceptions.CompaneroRechazoException;
 import py.edu.uc.lp3.exceptions.EntidadInvalidaException;
 import py.edu.uc.lp3.exceptions.EntidadNoEncontradaException;
 import py.edu.uc.lp3.exceptions.ExplosionImposibleException;
@@ -44,6 +46,28 @@ public class MinecraftExceptionHandler {
     public ResponseEntity<ErrorRespuesta> reglaRechazada(ReglaRechazadaException ex, HttpServletRequest pedido) {
         return responder(HttpStatus.BAD_REQUEST, ex.getCodigo(), ex,
                 "La regla '" + ex.getRegla() + "' rechazó la jugada: " + ex.getMessage(), pedido);
+    }
+
+    /**
+     * POO-09: A2 o A3 rechazaron la jugada del escenario.
+     *
+     * <p>El mensaje nombra el rol, así que el cliente distingue si falló la API
+     * de A2 o la de A3. La base quedó igual: la transacción no llegó a guardar.</p>
+     */
+    @ExceptionHandler(CompaneroRechazoException.class)
+    public ResponseEntity<ErrorRespuesta> companeroRechazo(CompaneroRechazoException ex, HttpServletRequest pedido) {
+        return responder(HttpStatus.CONFLICT, ex.getCodigo(), ex,
+                "Rechazo de " + ex.getRol() + " (" + ex.getCompanero() + "). "
+                        + "La jugada NO se guardó. " + ex.getMessage(), pedido);
+    }
+
+    /** POO-09: la API de A2 o de A3 no respondió. */
+    @ExceptionHandler(CompaneroInaccesibleException.class)
+    public ResponseEntity<ErrorRespuesta> companeroInaccesible(CompaneroInaccesibleException ex,
+                                                               HttpServletRequest pedido) {
+        return responder(HttpStatus.BAD_GATEWAY, ex.getCodigo(), ex,
+                "No hubo respuesta de " + ex.getRol() + " (" + ex.getCompanero() + "). "
+                        + "La jugada NO se guardó. " + ex.getMessage(), pedido);
     }
 
     /** Red de seguridad: una hija futura sin handler propio. */
