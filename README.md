@@ -396,8 +396,126 @@ Archivo: [`insomnia/ja-minecraft-poo08.insomnia.json`](insomnia/ja-minecraft-poo
 
 Hay un pedido por cada hija de la jerarquía: `ENTIDAD_INVALIDA` (400), `ENTIDAD_NO_ENCONTRADA` (404) y `EXPLOSION_IMPOSIBLE` (409).
 
+## POO-09: APIs cruzadas
+
+### Mapa A1 / A2 / A3
+
+Según el documento de grupos, los que quedan de a dos forman un **dúo**: cada uno consulta a su compañero y además pide el segundo servicio a alguien de un trío del mismo juego, que les deja usar su OpenAPI.
+
+| Rol | Quién | Usuario de GitHub | Puerto | OpenAPI |
+|---|---|---|---|---|
+| **A1** (yo) | Javier Atlasovich | `javifacha123` | 8080 | <http://localhost:8080/v3/api-docs> |
+| **A2** | _(pendiente de confirmar)_ | — | 8081 | <http://localhost:8081/v3/api-docs> |
+| **A3** | _(pendiente de confirmar)_ | — | 8082 | <http://localhost:8082/v3/api-docs> |
+
+### Las reglas citadas
+
+**Mis dos reglas (las que publico para que me consulten):**
+
+1. **Onda expansiva** — `POST /api/reglas/onda-expansiva`. A una distancia `d` de un explosivo de potencia `p` y radio `r`, el daño es `ceil(p × (r + 1 − d) / (r + 1))`. Rechaza si la entidad está fuera del radio o si el daño declarado no coincide.
+2. **Esquive del Enderman** — `POST /api/reglas/esquive-enderman`. El Enderman necesita `ceil(r + 1 − d)` bloques de teletransporte para salir del radio. Rechaza si no le alcanzan.
+
+Las dos responden **200** cuando aceptan y **400 `REGLA_RECHAZADA`** cuando rechazan, igual que el ejemplo del enunciado.
+
+**Las reglas que consulto:**
+
+| Rol | Regla | Endpoint |
+|---|---|---|
+| A2 | _(pendiente)_ | _(pendiente)_ |
+| A3 | _(pendiente)_ | _(pendiente)_ |
+
+### El escenario, en una frase
+
+Un Creeper detona y la onda alcanza a un Aldeano y a un Enderman: **la jugada se guarda solo si A2 acepta el daño que recibe el Aldeano y A3 acepta que el Enderman puede esquivar.**
+
+~~~http
+POST /api/escenarios
+{ "nombre": "Emboscada en la aldea", "creeperId": 1, "aldeanoId": 2, "endermanId": 3 }
+~~~
+
+Las tres entidades tienen que existir ya en la base: el escenario no las crea, propone una jugada sobre el mundo que hay.
+
+| Situación | Respuesta | Qué pasa con la base |
+|---|---|---|
+| A2 y A3 aceptan | 201 con la jugada guardada | se inserta una fila en `JUGADA` |
+| A2 o A3 rechaza | 409 `COMPANERO_RECHAZO`, el mensaje dice **cuál** | **queda igual** |
+| A2 o A3 no responde | 502 `COMPANERO_INACCESIBLE`, el mensaje dice **cuál** | **queda igual** |
+| Falta un id o el tipo no corresponde | 400 `ENTIDAD_INVALIDA` | queda igual |
+| Alguna de las tres entidades no existe | 404 `ENTIDAD_NO_ENCONTRADA` | queda igual |
+
+**Por qué no queda nada a medias.** `EscenarioServiceImpl.jugar` es `@Transactional`. Si A3 rechaza después de que A2 aceptó, la excepción corta el método antes del `save` y Spring revierte la transacción: la atomicidad la da la transacción, no un borrado manual. Por eso el historial de `/api/escenarios` solo contiene jugadas que los dos aprobaron.
+
+**Cómo se distingue de quién fue el fallo.** Hay dos excepciones distintas, cada una con su handler, y las dos guardan el rol:
+
+- `CompaneroRechazoException` → 409. El compañero contestó que **no**.
+- `CompaneroInaccesibleException` → 502. **No hubo nadie** del otro lado (servicio apagado, puerto cambiado, sin configurar).
+
+Son tipos separados a propósito: «me dijeron que no» y «no me contestaron» son problemas distintos y se resuelven distinto.
+
+### Dónde se configuran los compañeros
+
+En `application.properties`, bajo el prefijo `companeros`. **No hay ninguna URL escrita a mano en el código**: todo entra por `CompanerosProperties`, y se puede pisar al arrancar sin recompilar.
+
+~~~properties
+companeros.a2.nombre=...
+companeros.a2.base-url=http://localhost:8081
+companeros.a2.ruta=/api/reglas/...
+companeros.a3.nombre=...
+companeros.a3.base-url=http://localhost:8082
+companeros.a3.ruta=/api/reglas/...
+~~~
+
+Todo el HTTP hacia afuera vive en una sola clase, `CompaneroClientHttp`, que interpreta la respuesta por el **código de estado** (2xx acepta, 4xx rechaza). Eso la hace servir con cualquier compañero sin importar cómo haya armado su JSON. Los tiempos de espera son cortos (3 s para conectar, 5 s para responder) para que un servicio apagado falle rápido y con un mensaje claro en vez de quedarse colgado.
+
+### Cómo arrancar los tres servicios
+
+Cada uno en su propia terminal, desde la carpeta de su repositorio:
+
+~~~bash
+# A1 (este repositorio)
+./mvnw spring-boot:run
+
+# A2
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8081
+
+# A3
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8082
+~~~
+
+Si los puertos o las rutas de los compañeros cambian, no hace falta tocar el código:
+
+~~~bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--companeros.a2.base-url=http://localhost:8085 --companeros.a2.ruta=/api/reglas/otra"
+~~~
+
+### Probar el escenario sin los compañeros
+
+El circuito completo se puede verificar apuntando A2 y A3 a este mismo servicio, porque mis dos endpoints de reglas aceptan los campos que el escenario envía:
+
+~~~bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8099 --spring.datasource.url=jdbc:h2:mem:prueba --companeros.a2.base-url=http://localhost:8099 --companeros.a2.ruta=/api/reglas/onda-expansiva --companeros.a3.base-url=http://localhost:8099 --companeros.a3.ruta=/api/reglas/esquive-enderman"
+~~~
+
+Con eso se comprobó el escenario feliz (jugada guardada con 8 de daño y 2 bloques), el rechazo de A2 (Aldeano fuera del radio), el rechazo de A3 (Enderman sin bloques suficientes) y que **tras los dos rechazos el historial seguía teniendo una sola jugada**.
+
+### Colección de Insomnia de POO-09
+
+Archivo: [`insomnia/ja-minecraft-poo09.insomnia.json`](insomnia/ja-minecraft-poo09.insomnia.json) (formato de exportación v4). La colección de POO-08 se conserva aparte, sin cambios.
+
+**Importar:** en Insomnia, *Import* → *File* → elegir el archivo. Se crea la colección **JA Minecraft POO-09 (APIs cruzadas)** con un entorno que define `base_url` (8080), `a2_url` (8081), `a3_url` (8082) y los ids de prueba.
+
+**Recorrido** (con la base vacía: detener la app, borrar `data/` y arrancar de nuevo; y con los servicios de A2 y A3 arriba):
+
+1. `00 · Preparación y OpenAPI` — salud, mi OpenAPI, el de A2, el de A3, y las cinco entidades del escenario (reciben los ids 1 a 5, que son los del entorno).
+2. `01 · Mis dos reglas publicadas` — las dos reglas aceptando y las dos rechazando. Es lo que consulta un compañero cuando yo soy su A2 o su A3.
+3. `02 · Escenario cruzado` — el escenario feliz (201), el historial, **un rechazo por compañero** (A2 y A3, los dos 409) y el historial de nuevo, que tiene que seguir mostrando una sola jugada.
+4. `03 · Errores del escenario` — id inexistente (404), tipo equivocado (400) y compañero caído (502).
+
+Cada pedido lleva en su **descripción la respuesta que se verificó**, con el texto exacto. El enunciado avisa que guardar las respuestas de ejemplo evita perder el puntaje si el servicio de un compañero no arranca el día de la corrección.
+
 ## Entregas
 
 - Tarea 1 (Taller Git): <https://github.com/javifacha123/ja-taller-git-2026/commit/98bfbf4c5b4a393fa755bf43d689f344405d4def> (etiqueta `tarea-1`)
 - Tarea 2 (POO-06): ver el enlace al commit de la solución en la entrega de Classroom.
 - Tarea 3 (POO-08, CRUD + H2 + Insomnia): <https://github.com/javifacha123/ja-taller-git-2026/commit/84d8224b0348d1c94effd562c4d3892d77f818c5>
+- Tarea 4 (POO-09, APIs cruzadas): _(pendiente: pegar acá el enlace al commit de la solución)_

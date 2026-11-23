@@ -1,0 +1,509 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-11-23T16:12:38Z",
+  "__export_source": "insomnia.desktop.app:v8",
+  "resources": [
+    {
+      "_id": "wrk_ja_minecraft_poo09",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "JA Minecraft POO-09 (APIs cruzadas)",
+      "description": "Escenario cruzado de POO-09. Antes de recorrerla: arrancar este servicio en 8080, el de A2 en 8081 y el de A3 en 8082, con la base vacía (detener la app y borrar data/). Cada pedido trae en su descripción la respuesta que se verificó.",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_ja_poo09",
+      "_type": "environment",
+      "parentId": "wrk_ja_minecraft_poo09",
+      "name": "Base Environment",
+      "metaSortKey": 0,
+      "data": {
+        "base_url": "http://localhost:8080",
+        "a2_url": "http://localhost:8081",
+        "a3_url": "http://localhost:8082",
+        "creeper_id": 1,
+        "aldeano_id": 2,
+        "enderman_id": 3,
+        "aldeano_lejano_id": 4,
+        "enderman_cansado_id": 5,
+        "id_inexistente": 9999
+      }
+    },
+    {
+      "_id": "f09_00",
+      "_type": "request_group",
+      "parentId": "wrk_ja_minecraft_poo09",
+      "name": "00 · Preparación y OpenAPI",
+      "description": "Comprobar que los tres servicios están arriba y crear las entidades del escenario.",
+      "metaSortKey": 100,
+      "environment": {},
+      "environmentPropertyOrder": null
+    },
+    {
+      "_id": "r09_001",
+      "_type": "request",
+      "parentId": "f09_00",
+      "name": "01 GET / (salud)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/",
+      "description": "200 · 'API Minecraft funcionando correctamente'.",
+      "metaSortKey": 100,
+      "headers": [],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {}
+    },
+    {
+      "_id": "r09_002",
+      "_type": "request",
+      "parentId": "f09_00",
+      "name": "02 GET mi OpenAPI (A1)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/v3/api-docs",
+      "description": "200 · Documento OpenAPI 3.1 de este servicio. Navegable en /swagger-ui.html.\nDescribe el CRUD, la simulación, mis dos reglas y la tabla de códigos de error.",
+      "metaSortKey": 110,
+      "headers": [],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {}
+    },
+    {
+      "_id": "r09_003",
+      "_type": "request",
+      "parentId": "f09_00",
+      "name": "03 GET OpenAPI de A2",
+      "method": "GET",
+      "url": "{{ _.a2_url }}/v3/api-docs",
+      "description": "200 · El documento del compañero A2. Si da error de conexión, su servicio no está arriba.",
+      "metaSortKey": 120,
+      "headers": [],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {}
+    },
+    {
+      "_id": "r09_004",
+      "_type": "request",
+      "parentId": "f09_00",
+      "name": "04 GET OpenAPI de A3",
+      "method": "GET",
+      "url": "{{ _.a3_url }}/v3/api-docs",
+      "description": "200 · El documento del compañero A3.",
+      "metaSortKey": 130,
+      "headers": [],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {}
+    },
+    {
+      "_id": "r09_005",
+      "_type": "request",
+      "parentId": "f09_00",
+      "name": "05 POST Creeper (id 1)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "201 · Creeper en el origen. Potencia 12, radio 3.",
+      "metaSortKey": 140,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"creeper\",\n  \"nombre\": \"Creepy\",\n  \"vida\": 20,\n  \"x\": 0,\n  \"z\": 0\n}"
+      }
+    },
+    {
+      "_id": "r09_006",
+      "_type": "request",
+      "parentId": "f09_00",
+      "name": "06 POST Aldeano (id 2)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "201 · Aldeano en (1,1): queda a 1,41 bloques del Creeper, dentro del radio.",
+      "metaSortKey": 150,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"aldeano\",\n  \"nombre\": \"Testificate\",\n  \"vida\": 20,\n  \"x\": 1,\n  \"z\": 1\n}"
+      }
+    },
+    {
+      "_id": "r09_007",
+      "_type": "request",
+      "parentId": "f09_00",
+      "name": "07 POST Enderman (id 3)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "201 · Enderman en (2,0) con 8 bloques: le alcanzan para esquivar.",
+      "metaSortKey": 160,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"enderman\",\n  \"nombre\": \"Slender\",\n  \"vida\": 40,\n  \"bloquesTeletransporte\": 8,\n  \"x\": 2,\n  \"z\": 0\n}"
+      }
+    },
+    {
+      "_id": "r09_008",
+      "_type": "request",
+      "parentId": "f09_00",
+      "name": "08 POST Aldeano lejano (id 4)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "201 · Aldeano en (10,10): a 14,14 bloques, FUERA del radio. Sirve para el rechazo de A2.",
+      "metaSortKey": 170,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"aldeano\",\n  \"nombre\": \"AldeanoLejano\",\n  \"vida\": 20,\n  \"x\": 10,\n  \"z\": 10\n}"
+      }
+    },
+    {
+      "_id": "r09_009",
+      "_type": "request",
+      "parentId": "f09_00",
+      "name": "09 POST Enderman sin bloques (id 5)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/entidades",
+      "description": "201 · Enderman en (2,0) con UN solo bloque: necesita 2. Sirve para el rechazo de A3.",
+      "metaSortKey": 180,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"enderman\",\n  \"nombre\": \"SlenderCansado\",\n  \"vida\": 40,\n  \"bloquesTeletransporte\": 1,\n  \"x\": 2,\n  \"z\": 0\n}"
+      }
+    },
+    {
+      "_id": "f09_01",
+      "_type": "request_group",
+      "parentId": "wrk_ja_minecraft_poo09",
+      "name": "01 · Mis dos reglas publicadas",
+      "description": "Lo que consulta un compañero cuando yo soy su A2 o su A3. No tocan la base.",
+      "metaSortKey": 200,
+      "environment": {},
+      "environmentPropertyOrder": null
+    },
+    {
+      "_id": "r09_011",
+      "_type": "request",
+      "parentId": "f09_01",
+      "name": "01 Regla 1 · acepta",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/onda-expansiva",
+      "description": "200 VERIFICADO · {\"regla\":\"onda-expansiva\",\"aceptada\":true,\"danioCalculado\":8,\n \"motivo\":\"A 1.41 bloques de un explosivo de potencia 12 y radio 3 corresponden 8 de daño\"}",
+      "metaSortKey": 100,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"potencia\": 12,\n  \"radio\": 3,\n  \"distancia\": 1.41\n}"
+      }
+    },
+    {
+      "_id": "r09_012",
+      "_type": "request",
+      "parentId": "f09_01",
+      "name": "02 Regla 1 · rechaza (fuera del radio)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/onda-expansiva",
+      "description": "400 REGLA_RECHAZADA VERIFICADO · 'La onda no alcanza: la distancia 14.14 es mayor que el\nradio 3, así que no corresponde daño'.",
+      "metaSortKey": 110,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"potencia\": 12,\n  \"radio\": 3,\n  \"distancia\": 14.14\n}"
+      }
+    },
+    {
+      "_id": "r09_013",
+      "_type": "request",
+      "parentId": "f09_01",
+      "name": "03 Regla 2 · acepta",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/esquive-enderman",
+      "description": "200 VERIFICADO · {\"regla\":\"esquive-enderman\",\"aceptada\":true,\"bloquesNecesarios\":2,\n \"motivo\":\"Con 8 bloques el Enderman gasta 2 y reaparece a 4 bloques del centro, sin recibir daño\"}",
+      "metaSortKey": 120,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"radio\": 3,\n  \"distancia\": 2,\n  \"bloquesDisponibles\": 8\n}"
+      }
+    },
+    {
+      "_id": "r09_014",
+      "_type": "request",
+      "parentId": "f09_01",
+      "name": "04 Regla 2 · rechaza (sin bloques)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/reglas/esquive-enderman",
+      "description": "400 REGLA_RECHAZADA VERIFICADO · 'El Enderman necesita 2 bloques de teletransporte para\nsalir del radio 3 y solo tiene 1: no puede esquivar'.",
+      "metaSortKey": 130,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"radio\": 3,\n  \"distancia\": 2,\n  \"bloquesDisponibles\": 1\n}"
+      }
+    },
+    {
+      "_id": "f09_02",
+      "_type": "request_group",
+      "parentId": "wrk_ja_minecraft_poo09",
+      "name": "02 · Escenario cruzado",
+      "description": "El escenario propio: se guarda SOLO si A2 y A3 aceptan.",
+      "metaSortKey": 300,
+      "environment": {},
+      "environmentPropertyOrder": null
+    },
+    {
+      "_id": "r09_021",
+      "_type": "request",
+      "parentId": "f09_02",
+      "name": "01 ESCENARIO FELIZ (201)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios",
+      "description": "201 VERIFICADO · Las dos APIs aceptaron y la jugada quedó guardada con\n\"danioAldeano\":8 y \"bloquesEnderman\":2, con el veredicto de cada compañero registrado.\n\nA2 valida el daño del Aldeano (regla de la onda expansiva).\nA3 valida el esquive del Enderman.",
+      "metaSortKey": 100,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Emboscada en la aldea\",\n  \"creeperId\": 1,\n  \"aldeanoId\": 2,\n  \"endermanId\": 3\n}"
+      }
+    },
+    {
+      "_id": "r09_022",
+      "_type": "request",
+      "parentId": "f09_02",
+      "name": "02 GET historial (una jugada)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/escenarios",
+      "description": "200 · Solo aparecen las jugadas que los DOS compañeros aceptaron.",
+      "metaSortKey": 110,
+      "headers": [],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {}
+    },
+    {
+      "_id": "r09_023",
+      "_type": "request",
+      "parentId": "f09_02",
+      "name": "03 RECHAZO DE A2 (409)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios",
+      "description": "409 COMPANERO_RECHAZO VERIFICADO · El Aldeano lejano está a 14,14 bloques y el radio es 3,\nasí que la regla de A2 rechaza. El mensaje empieza con 'Rechazo de A2 (...)' y aclara\n'La jugada NO se guardó'. La base queda igual.",
+      "metaSortKey": 120,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Fuera de alcance\",\n  \"creeperId\": 1,\n  \"aldeanoId\": 4,\n  \"endermanId\": 3\n}"
+      }
+    },
+    {
+      "_id": "r09_024",
+      "_type": "request",
+      "parentId": "f09_02",
+      "name": "04 RECHAZO DE A3 (409)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios",
+      "description": "409 COMPANERO_RECHAZO VERIFICADO · Ese Enderman tiene 1 bloque y necesita 2, así que la\nregla de A3 rechaza. El mensaje empieza con 'Rechazo de A3 (...)'.\nNotar que A2 YA había aceptado: la transacción igual no deja nada escrito.",
+      "metaSortKey": 130,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Esquive imposible\",\n  \"creeperId\": 1,\n  \"aldeanoId\": 2,\n  \"endermanId\": 5\n}"
+      }
+    },
+    {
+      "_id": "r09_025",
+      "_type": "request",
+      "parentId": "f09_02",
+      "name": "05 GET historial (NO creció)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/escenarios",
+      "description": "200 VERIFICADO · Sigue habiendo UNA sola jugada. Es la prueba de que un rechazo deja la\nbase exactamente como estaba, que es lo que pide el enunciado.",
+      "metaSortKey": 140,
+      "headers": [],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {}
+    },
+    {
+      "_id": "f09_03",
+      "_type": "request_group",
+      "parentId": "wrk_ja_minecraft_poo09",
+      "name": "03 · Errores del escenario",
+      "description": "Los otros caminos de error, cada uno con su código.",
+      "metaSortKey": 400,
+      "environment": {},
+      "environmentPropertyOrder": null
+    },
+    {
+      "_id": "r09_031",
+      "_type": "request",
+      "parentId": "f09_03",
+      "name": "01 Id inexistente (404)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios",
+      "description": "404 ENTIDAD_NO_ENCONTRADA · El Creeper 9999 no existe. Ni siquiera se consulta a los compañeros.",
+      "metaSortKey": 100,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Creeper fantasma\",\n  \"creeperId\": 9999,\n  \"aldeanoId\": 2,\n  \"endermanId\": 3\n}"
+      }
+    },
+    {
+      "_id": "r09_032",
+      "_type": "request",
+      "parentId": "f09_03",
+      "name": "02 Tipo equivocado (400)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios",
+      "description": "400 ENTIDAD_INVALIDA · Se manda el Creeper (id 1) en el lugar del Aldeano.\n'La entidad 1 es creeper y el escenario esperaba un Aldeano'.",
+      "metaSortKey": 110,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Tipos cruzados\",\n  \"creeperId\": 1,\n  \"aldeanoId\": 1,\n  \"endermanId\": 3\n}"
+      }
+    },
+    {
+      "_id": "r09_033",
+      "_type": "request",
+      "parentId": "f09_03",
+      "name": "03 Compañero caído (502)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/escenarios",
+      "description": "502 COMPANERO_INACCESIBLE · Para provocarlo, apagar el servicio de A2 o arrancar este\ncon --companeros.a2.base-url=http://localhost:9999 y repetir el escenario feliz.\nEl mensaje distingue 'no hubo respuesta' de 'me dijeron que no', y la base queda igual.",
+      "metaSortKey": 120,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Compañero apagado\",\n  \"creeperId\": 1,\n  \"aldeanoId\": 2,\n  \"endermanId\": 3\n}"
+      }
+    }
+  ]
+}
