@@ -9,7 +9,7 @@
       "_type": "workspace",
       "parentId": null,
       "name": "JA Minecraft POO-09 (APIs cruzadas)",
-      "description": "Escenario cruzado de POO-09. A1 Javier Atlasovich (8080), A2 Adrián Vera (8081), A3 Yamil Padilla (8082). Antes de recorrerla hay que levantar PRIMERO los servicios de A2 y A3, y después el propio, con la base vacía (detener la app y borrar data/). Cada pedido trae en su descripción la respuesta esperada.",
+      "description": "Escenario cruzado de POO-09. A1 Javier Atlasovich (8080), A2 Adrian Vera (8081), A3 Yamil Padilla (8082). Levantar PRIMERO A2 y A3, con sus bases vacias, y despues el propio. RECORRER LAS CARPETAS EN ORDEN: el orden importa, porque cada aceptacion de A2 consume su monstruo. Cada pedido trae en su descripcion la respuesta verificada.",
       "scope": "collection"
     },
     {
@@ -35,7 +35,7 @@
       "_type": "request_group",
       "parentId": "wrk_ja_minecraft_poo09",
       "name": "00 · Preparación y OpenAPI",
-      "description": "Comprobar que los tres servicios están arriba y crear las entidades del escenario.",
+      "description": "Comprobar que los tres servicios estan arriba, leer sus OpenAPI y crear las entidades del escenario, tanto las mias como el monstruo que A2 necesita.",
       "metaSortKey": 100,
       "environment": {},
       "environmentPropertyOrder": null
@@ -331,11 +331,11 @@
       "_id": "r09_021",
       "_type": "request",
       "parentId": "f09_02",
-      "name": "01 ESCENARIO FELIZ (201)",
+      "name": "02 ESCENARIO FELIZ (201)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios",
       "description": "201 VERIFICADO el 23/11/2026 contra los servicios reales de Adrian (8081) y Yamil (8082).\n\nAdrian valida la POTENCIA (12) y Yamil el RADIO (3). Los dos aceptan y la jugada\nqueda guardada. Respuesta obtenida (recortada):\n\n{\"id\":1,\"nombre\":\"Emboscada en la aldea\",\"creeperId\":1,\"aldeanoId\":2,\n \"endermanId\":3,\"potencia\":12,\"radio\":3,\"danioAldeano\":8,\"bloquesEnderman\":2,\n \"companeroA2\":\"Adrian Vera\",\n \"veredictoA2\":\"{\\\"monstruoId\\\":1,\\\"monstruo\\\":\\\"CreeperDeAdrian\\\",\\\"potencia\\\":12,\n   \\\"sonido\\\":\\\"CreeperDeAdrian infla su cuerpo: fssss... BOOM!\\\",...}\",\n \"companeroA3\":\"Yamil Padilla\",\n \"veredictoA3\":\"{\\\"x\\\":0.0,\\\"y\\\":64.0,\\\"z\\\":0.0,\\\"radio\\\":3.0,\\\"danioMaximo\\\":20.0,...}\"}\n\nNOTA: el monstruo de Adrian EXPLOTA al aceptar y queda muerto. Para repetir el\ncamino feliz hay que crear otro monstruo en su base:\nPOST localhost:8081/minecraft/entidades\n{\"tipo\":\"monstruo\",\"nombre\":\"CreeperDeAdrian\",\"vida\":20,\"altura\":1.7,\n \"hostil\":true,\"potenciaExplosiva\":50}",
-      "metaSortKey": 100,
+      "metaSortKey": 110,
       "headers": [
         {
           "name": "Content-Type",
@@ -354,11 +354,11 @@
       "_id": "r09_022",
       "_type": "request",
       "parentId": "f09_02",
-      "name": "02 GET historial (una jugada)",
+      "name": "03 GET historial (una jugada nueva)",
       "method": "GET",
       "url": "{{ _.base_url }}/api/escenarios",
       "description": "200 · Solo aparecen las jugadas que los DOS compañeros aceptaron.",
-      "metaSortKey": 110,
+      "metaSortKey": 120,
       "headers": [],
       "parameters": [],
       "authentication": {},
@@ -369,11 +369,11 @@
       "_id": "r09_023",
       "_type": "request",
       "parentId": "f09_02",
-      "name": "03 RECHAZO DE A2 · potencia ilegal (409)",
+      "name": "01 RECHAZO DE A2 · potencia ilegal (409)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios",
       "description": "409 COMPANERO_RECHAZO · VERIFICADO el 23/11/2026 contra el servicio real de Adrian.\n\nSe propone detonar con potencia 9999. Respuesta obtenida:\n\n{\"error\":\"COMPANERO_RECHAZO\",\"excepcion\":\"CompaneroRechazoException\",\n \"estado\":409,\n \"mensaje\":\"Rechazo de A2 (Adrian Vera). La jugada NO se guardó. A2 (Adrian Vera)\n   rechazó la jugada con 400: {\\\"status\\\":400,\\\"codigo\\\":\\\"ENTIDAD_INVALIDA\\\",\n   \\\"mensaje\\\":\\\"La potencia debe estar entre 1 y 50 para CreeperDeAdrian\\\",\n   \\\"path\\\":\\\"/minecraft/simulacion/explosion\\\"}\",\n \"ruta\":\"/api/escenarios\"}\n\nLa base queda igual: el pedido 05 lo comprueba.",
-      "metaSortKey": 120,
+      "metaSortKey": 100,
       "headers": [
         {
           "name": "Content-Type",
@@ -392,11 +392,11 @@
       "_id": "r09_024",
       "_type": "request",
       "parentId": "f09_02",
-      "name": "04 RECHAZO DE A3 · radio ilegal (409)",
+      "name": "05 RECHAZO DE A3 · radio ilegal (409)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios",
       "description": "409 COMPANERO_RECHAZO · VERIFICADO el 23/11/2026 contra el servicio real de Yamil.\n\nSe propone detonar con radio 500. Respuesta obtenida:\n\n{\"error\":\"COMPANERO_RECHAZO\",\"excepcion\":\"CompaneroRechazoException\",\n \"estado\":409,\n \"mensaje\":\"Rechazo de A3 (Yamil Padilla). La jugada NO se guardó. A3 (Yamil\n   Padilla) rechazó la jugada con 422: {\\\"detail\\\":\\\"El radio debe ser mayor que 0\n   y como máximo 100\\\",\\\"instance\\\":\\\"/api/explosiones\\\",\\\"status\\\":422,\n   \\\"title\\\":\\\"Unprocessable Content\\\"}\",\n \"ruta\":\"/api/escenarios\"}\n\nESTE ES EL CASO IMPORTANTE: A2 (Adrian) YA HABIA ACEPTADO la potencia 12 cuando\nA3 rechazo el radio. Aun asi no queda nada escrito, porque jugar() es\n@Transactional y la excepcion revierte la transaccion antes del save.",
-      "metaSortKey": 130,
+      "metaSortKey": 140,
       "headers": [
         {
           "name": "Content-Type",
@@ -415,11 +415,11 @@
       "_id": "r09_025",
       "_type": "request",
       "parentId": "f09_02",
-      "name": "05 GET historial (NO creció)",
+      "name": "06 GET historial (NO crecio)",
       "method": "GET",
       "url": "{{ _.base_url }}/api/escenarios",
       "description": "200 VERIFICADO · Despues de los dos rechazos el historial seguia mostrando UNA\nsola jugada (\"id\":1), la del camino feliz. Es la prueba de que un rechazo deja la\nbase exactamente como estaba, que es lo que pide el enunciado.",
-      "metaSortKey": 140,
+      "metaSortKey": 150,
       "headers": [],
       "parameters": [],
       "authentication": {},
@@ -504,6 +504,44 @@
         "mimeType": "application/json",
         "text": "{\n  \"nombre\": \"Compañero apagado\",\n  \"creeperId\": 1,\n  \"aldeanoId\": 2,\n  \"endermanId\": 3\n}"
       }
+    },
+    {
+      "_id": "r09_0235",
+      "_type": "request",
+      "parentId": "f09_02",
+      "name": "04 >>> ANTES DE SEGUIR: reiniciar la base de A2 <<<",
+      "method": "GET",
+      "url": "{{ _.a2_url }}/minecraft/entidades",
+      "metaSortKey": 130,
+      "headers": [],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {},
+      "description": "LEER ESTO ANTES DEL PEDIDO 05.\n\nEl escenario feliz del pedido 02 hace que el monstruo de A2 EXPLOTE y quede muerto.\nLa regla de A2 dice que un monstruo muerto no puede volver a explotar, y que la\nmuerte es un estado final (no se puede revivir con PATCH).\n\nSi se corre el pedido 05 sin reiniciar, A2 rechaza por ENTIDAD_MUERTA y nunca se\nllega a consultar a A3: pareceria que el escenario no distingue entre companeros,\ncuando en realidad A2 corta antes.\n\nEste GET muestra el estado del monstruo. Si dice \"vivo\":false, hay que:\n\n  1. Parar el servicio de A2 (Ctrl+C)\n  2. cd <repo de A2> && rm -rf data/\n  3. Volver a arrancarlo en el puerto 8081\n  4. Correr de nuevo el pedido 09 de la carpeta 00 (crear el monstruo), que vuelve\n     a quedar con id 1, que es el que espera companeros.a2.cuerpo[monstruoId]\n\nCon el monstruo vivo, el pedido 05 demuestra lo importante: A2 ACEPTA la potencia\n12 y recien despues A3 rechaza el radio, y aun asi no se guarda nada."
+    },
+    {
+      "_id": "r09_010",
+      "_type": "request",
+      "parentId": "f09_00",
+      "name": "10 POST monstruo en la base de A2 (Adrián)",
+      "method": "POST",
+      "url": "{{ _.a2_url }}/minecraft/entidades",
+      "metaSortKey": 190,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "authentication": {},
+      "settingEncodeUrl": true,
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"monstruo\",\n  \"nombre\": \"CreeperDeAdrian\",\n  \"vida\": 20,\n  \"altura\": 1.7,\n  \"hostil\": true,\n  \"potenciaExplosiva\": 50\n}"
+      },
+      "description": "201 · Crea en la base de A2 el monstruo contra el que se valida la potencia.\n\nIMPORTANTE: con la base de A2 recien borrada, este monstruo recibe el id 1, que es\nel que espera companeros.a2.cuerpo[monstruoId]. Si la base de A2 ya tenia filas, el\nid sera otro y hay que arrancar mi servicio pisando esa propiedad:\n\n  ./mvnw spring-boot:run -Dspring-boot.run.arguments=\"--companeros.a2.cuerpo[monstruoId]=N\"\n\npotenciaExplosiva 50 es su maximo: por eso acepta mi potencia 12 y rechaza la de 9999."
     }
   ]
 }

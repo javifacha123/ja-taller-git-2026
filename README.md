@@ -550,7 +550,18 @@ El enunciado pide dejar registrado qué se hizo cuando A2 o A3 no estaban dispon
 | Historial tras los dos rechazos | **Una sola** jugada: ningún rechazo dejó nada escrito |
 
   Las respuestas exactas están guardadas en la descripción de cada pedido de la colección de Insomnia.
-- **Si el monstruo de Adrián ya explotó:** su regla impide que un monstruo muerto vuelva a explotar, así que para repetir el camino feliz hay que crear otro en su base con `POST localhost:8081/minecraft/entidades`.
+- **El orden en que se recorre la colección importa.** Cada vez que A2 acepta, su monstruo explota y queda muerto; su regla además dice que la muerte es un estado final, así que no se puede revivir con un `PATCH`. Si se corre el rechazo de A3 con el monstruo ya muerto, **A2 corta antes** y el rechazo llega atribuido a A2, no a A3. Por eso la colección está ordenada así:
+
+| # | Pedido | Qué le pasa al monstruo de A2 |
+|---|---|---|
+| 01 | Rechazo de A2 (potencia 9999) | **sobrevive**: A2 rechaza antes de simular |
+| 02 | Escenario feliz | **muere**: A2 acepta y lo hace explotar |
+| 03 | Historial (una jugada nueva) | — |
+| 04 | Aviso: reiniciar la base de A2 | se vuelve a crear, con id 1 |
+| 05 | Rechazo de A3 (radio 500) | **muere**: A2 acepta y recién después A3 rechaza |
+| 06 | Historial (no creció) | — |
+
+  Reiniciar la base de A2 es: parar su servicio, `rm -rf data/`, arrancarlo de nuevo en el 8081 y repetir el pedido 10 de la carpeta 00. Si su monstruo quedara con otro id, no hace falta tocar código: se arranca este servicio pisando la propiedad con `--companeros.a2.cuerpo[monstruoId]=N`.
 - **Verificación independiente:** el circuito también se probó apuntando A2 y A3 a este mismo servicio (ver más abajo), así el cliente, el escenario, la persistencia y la atribución del rechazo quedan demostrados aunque un compañero no arranque el día de la corrección.
 
 ### Cómo clonar y arrancar los tres
