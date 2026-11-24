@@ -175,6 +175,6 @@ coincidieron.
 |---|---|
 | Código | <https://github.com/javifacha123/ja-taller-git-2026> |
 | README al día | `README.md` |
-| Bitácora de IA | `BITACORA.md` |
+| Bitácora, con la declaración de uso de IA | `BITACORA.md` |
 | Colección de Insomnia | `insomnia/ja-minecraft-poo09.insomnia.json` |
-| Este documento | `docs/ESPECIFICACIONES-POO-09.md` |
+| Este documento | `docs/ESPECIFICACIONES-POO-09.md` en el repositorio; a Classroom se sube la misma versión exportada a Word (`.docx`) |
