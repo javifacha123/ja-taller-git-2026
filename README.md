@@ -607,4 +607,4 @@ Cada pedido lleva en su **descripción la respuesta que se verificó**, con el t
 - Tarea 1 (Taller Git): <https://github.com/javifacha123/ja-taller-git-2026/commit/98bfbf4c5b4a393fa755bf43d689f344405d4def> (etiqueta `tarea-1`)
 - Tarea 2 (POO-06): ver el enlace al commit de la solución en la entrega de Classroom.
 - Tarea 3 (POO-08, CRUD + H2 + Insomnia): <https://github.com/javifacha123/ja-taller-git-2026/commit/84d8224b0348d1c94effd562c4d3892d77f818c5>
-- Tarea 4 (POO-09, APIs cruzadas): _(pendiente: pegar acá el enlace al commit de la solución)_
+- Tarea 4 (POO-09, APIs cruzadas): <https://github.com/javifacha123/ja-taller-git-2026/commit/c210872fd8f1c958115f5d11e5376f97eb684ea0>
