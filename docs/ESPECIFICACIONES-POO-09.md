@@ -2,7 +2,7 @@
 
 **Alumno:** Javier Atlasovich · **Usuario de GitHub:** `javifacha123`
 **Repositorio:** <https://github.com/javifacha123/ja-taller-git-2026>
-**Enlace al commit de la solución:** https://github.com/javifacha123/ja-taller-git-2026/commit/c210872fd8f1c958115f5d11e5376f97eb684ea0
+**Enlace al commit de la solución:** https://github.com/javifacha123/ja-taller-git-2026/commit/63c3cedc2b21df3d0a1fd9dcefa94efceefedccc
 **Trabajo individual.** El grupo sirvió solo para acordar a quién se consulta.
 
 ---
