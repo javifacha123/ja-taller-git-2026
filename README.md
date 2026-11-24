@@ -540,7 +540,18 @@ El enunciado pide dejar registrado qué se hizo cuando A2 o A3 no estaban dispon
 - **Contacto:** se pidió por el chat del curso el OpenAPI, las dos reglas y la ruta de validación de cada compañero, indicando los puertos propuestos (yo 8080, A2 8081, A3 8082).
 - **Reintento:** el cliente espera 3 segundos para conectar y 5 para la respuesta. Si no hay nadie, responde **502 `COMPANERO_INACCESIBLE`** diciendo cuál falló, en vez de quedarse colgado.
 - **Respuestas guardadas:** cada pedido de la colección de Insomnia lleva en su descripción la **respuesta verificada**, con el texto exacto del escenario feliz y de los dos rechazos.
-- **Verificación independiente:** el circuito completo se probó apuntando A2 y A3 a este mismo servicio (ver más abajo), así el cliente, el escenario, la persistencia y la atribución del rechazo quedan demostrados aunque un compañero no arranque el día de la corrección.
+- **Verificación contra los servicios reales (23/11/2026).** Se levantaron los tres y se recorrió el circuito completo:
+
+| Prueba | Resultado |
+|---|---|
+| Escenario feliz | 201 · jugada guardada con potencia 12, radio 3, 8 de daño y 2 bloques, con el veredicto de cada uno. Adrián respondió *«CreeperDeAdrian infla su cuerpo: fssss… BOOM!»* y Yamil validó el radio 3.0 |
+| Rechazo de A2 | 409 · *«Rechazo de A2 (Adrian Vera)»*, con su mensaje: *«La potencia debe estar entre 1 y 50 para CreeperDeAdrian»* (400) |
+| Rechazo de A3 | 409 · *«Rechazo de A3 (Yamil Padilla)»*, con su mensaje: *«El radio debe ser mayor que 0 y como máximo 100»* (422). **Adrián ya había aceptado** cuando Yamil rechazó |
+| Historial tras los dos rechazos | **Una sola** jugada: ningún rechazo dejó nada escrito |
+
+  Las respuestas exactas están guardadas en la descripción de cada pedido de la colección de Insomnia.
+- **Si el monstruo de Adrián ya explotó:** su regla impide que un monstruo muerto vuelva a explotar, así que para repetir el camino feliz hay que crear otro en su base con `POST localhost:8081/minecraft/entidades`.
+- **Verificación independiente:** el circuito también se probó apuntando A2 y A3 a este mismo servicio (ver más abajo), así el cliente, el escenario, la persistencia y la atribución del rechazo quedan demostrados aunque un compañero no arranque el día de la corrección.
 
 ### Cómo clonar y arrancar los tres
 

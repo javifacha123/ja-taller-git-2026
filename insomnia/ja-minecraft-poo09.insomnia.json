@@ -334,7 +334,7 @@
       "name": "01 ESCENARIO FELIZ (201)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios",
-      "description": "201 · Las dos APIs aceptan y la jugada queda guardada.\n\nAdrián valida la POTENCIA de la detonación (12) y Yamil valida su RADIO (3).\nComo no se mandan 'potenciaPropuesta' ni 'radioPropuesto', se usan los del\nCreeper, que son legales en los dos modelos.",
+      "description": "201 VERIFICADO el 23/11/2026 contra los servicios reales de Adrian (8081) y Yamil (8082).\n\nAdrian valida la POTENCIA (12) y Yamil el RADIO (3). Los dos aceptan y la jugada\nqueda guardada. Respuesta obtenida (recortada):\n\n{\"id\":1,\"nombre\":\"Emboscada en la aldea\",\"creeperId\":1,\"aldeanoId\":2,\n \"endermanId\":3,\"potencia\":12,\"radio\":3,\"danioAldeano\":8,\"bloquesEnderman\":2,\n \"companeroA2\":\"Adrian Vera\",\n \"veredictoA2\":\"{\\\"monstruoId\\\":1,\\\"monstruo\\\":\\\"CreeperDeAdrian\\\",\\\"potencia\\\":12,\n   \\\"sonido\\\":\\\"CreeperDeAdrian infla su cuerpo: fssss... BOOM!\\\",...}\",\n \"companeroA3\":\"Yamil Padilla\",\n \"veredictoA3\":\"{\\\"x\\\":0.0,\\\"y\\\":64.0,\\\"z\\\":0.0,\\\"radio\\\":3.0,\\\"danioMaximo\\\":20.0,...}\"}\n\nNOTA: el monstruo de Adrian EXPLOTA al aceptar y queda muerto. Para repetir el\ncamino feliz hay que crear otro monstruo en su base:\nPOST localhost:8081/minecraft/entidades\n{\"tipo\":\"monstruo\",\"nombre\":\"CreeperDeAdrian\",\"vida\":20,\"altura\":1.7,\n \"hostil\":true,\"potenciaExplosiva\":50}",
       "metaSortKey": 100,
       "headers": [
         {
@@ -372,7 +372,7 @@
       "name": "03 RECHAZO DE A2 · potencia ilegal (409)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios",
-      "description": "409 COMPANERO_RECHAZO · Se propone detonar con potencia 9999.\nLa regla de Adrián dice que la potencia de un monstruo no puede superar su\nmáximo, así que responde 4xx y mi escenario lo traduce a 409 atribuido a A2.\nEl mensaje empieza con 'Rechazo de A2 (Adrian Vera)' y aclara que NO se guardó.\nLa base queda igual.",
+      "description": "409 COMPANERO_RECHAZO · VERIFICADO el 23/11/2026 contra el servicio real de Adrian.\n\nSe propone detonar con potencia 9999. Respuesta obtenida:\n\n{\"error\":\"COMPANERO_RECHAZO\",\"excepcion\":\"CompaneroRechazoException\",\n \"estado\":409,\n \"mensaje\":\"Rechazo de A2 (Adrian Vera). La jugada NO se guardó. A2 (Adrian Vera)\n   rechazó la jugada con 400: {\\\"status\\\":400,\\\"codigo\\\":\\\"ENTIDAD_INVALIDA\\\",\n   \\\"mensaje\\\":\\\"La potencia debe estar entre 1 y 50 para CreeperDeAdrian\\\",\n   \\\"path\\\":\\\"/minecraft/simulacion/explosion\\\"}\",\n \"ruta\":\"/api/escenarios\"}\n\nLa base queda igual: el pedido 05 lo comprueba.",
       "metaSortKey": 120,
       "headers": [
         {
@@ -395,7 +395,7 @@
       "name": "04 RECHAZO DE A3 · radio ilegal (409)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/escenarios",
-      "description": "409 COMPANERO_RECHAZO · Se propone detonar con radio 500.\nLa regla de Yamil exige que el radio esté en (0, 100], así que responde 422 y\nmi escenario lo traduce a 409 atribuido a A3.\nImportante: A2 YA había aceptado cuando A3 rechaza, y aun así la transacción no\ndeja nada escrito. Eso es lo que prueba el pedido siguiente.",
+      "description": "409 COMPANERO_RECHAZO · VERIFICADO el 23/11/2026 contra el servicio real de Yamil.\n\nSe propone detonar con radio 500. Respuesta obtenida:\n\n{\"error\":\"COMPANERO_RECHAZO\",\"excepcion\":\"CompaneroRechazoException\",\n \"estado\":409,\n \"mensaje\":\"Rechazo de A3 (Yamil Padilla). La jugada NO se guardó. A3 (Yamil\n   Padilla) rechazó la jugada con 422: {\\\"detail\\\":\\\"El radio debe ser mayor que 0\n   y como máximo 100\\\",\\\"instance\\\":\\\"/api/explosiones\\\",\\\"status\\\":422,\n   \\\"title\\\":\\\"Unprocessable Content\\\"}\",\n \"ruta\":\"/api/escenarios\"}\n\nESTE ES EL CASO IMPORTANTE: A2 (Adrian) YA HABIA ACEPTADO la potencia 12 cuando\nA3 rechazo el radio. Aun asi no queda nada escrito, porque jugar() es\n@Transactional y la excepcion revierte la transaccion antes del save.",
       "metaSortKey": 130,
       "headers": [
         {
@@ -418,7 +418,7 @@
       "name": "05 GET historial (NO creció)",
       "method": "GET",
       "url": "{{ _.base_url }}/api/escenarios",
-      "description": "200 VERIFICADO · Sigue habiendo UNA sola jugada. Es la prueba de que un rechazo deja la\nbase exactamente como estaba, que es lo que pide el enunciado.",
+      "description": "200 VERIFICADO · Despues de los dos rechazos el historial seguia mostrando UNA\nsola jugada (\"id\":1), la del camino feliz. Es la prueba de que un rechazo deja la\nbase exactamente como estaba, que es lo que pide el enunciado.",
       "metaSortKey": 140,
       "headers": [],
       "parameters": [],
